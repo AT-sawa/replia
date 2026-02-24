@@ -5,12 +5,45 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
+const IconBell = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <path d="M18 16H6l2-4V9a4 4 0 018 0v3l2 4Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    <path d="M10 20a2 2 0 004 0" stroke="currentColor" strokeWidth="1.5" />
+  </svg>
+)
+const IconHistory = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <path d="M20 2H4C2.9 2 2 2.9 2 4v14l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    <path d="M7 9h10M7 13h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+)
+const IconLock = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <rect x="5" y="11" width="14" height="11" rx="2" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M8 11V7a4 4 0 018 0v4" stroke="currentColor" strokeWidth="1.5" />
+    <circle cx="12" cy="16" r="1.5" fill="currentColor" />
+  </svg>
+)
+const IconHelp = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M9.5 9.5c0-1.4 1.1-2.5 2.5-2.5s2.5 1.1 2.5 2.5c0 1.8-2.5 2-2.5 3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    <circle cx="12" cy="17.5" r="1" fill="currentColor" />
+  </svg>
+)
+const IconDoc = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <path d="M14 2H6C4.9 2 4 2.9 4 4v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+    <path d="M14 2v6h6M8 13h8M8 17h5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+)
+
 const menuItems = [
-  { icon: '🔔', label: '通知設定', href: '/notifications' },
-  { icon: '📋', label: '相談履歴', href: '/chat' },
-  { icon: '🔒', label: 'アカウント設定', href: '/account' },
-  { icon: '❓', label: 'ヘルプ・よくある質問', href: '/help' },
-  { icon: '📝', label: '利用規約', href: '/terms' },
+  { Icon: IconBell,    label: '通知設定',           href: '/notifications' },
+  { Icon: IconHistory, label: '相談履歴',            href: '/chat' },
+  { Icon: IconLock,    label: 'アカウント設定',       href: '/account' },
+  { Icon: IconHelp,    label: 'ヘルプ・よくある質問', href: '/help' },
+  { Icon: IconDoc,     label: '利用規約',            href: '/terms' },
 ]
 
 export default function MyPage() {
@@ -59,7 +92,10 @@ export default function MyPage() {
               alignItems: 'center', justifyContent: 'center', fontSize: 24,
             }}
           >
-            👤
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="8" r="4" stroke="white" strokeWidth="1.5" />
+              <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
           </div>
           <div>
             <p style={{ fontSize: 16, fontWeight: 700, color: '#0F1419', margin: 0 }}>
@@ -90,7 +126,9 @@ export default function MyPage() {
             }
             const inner = (
               <>
-                <span style={{ fontSize: 18, width: 24, textAlign: 'center' }}>{item.icon}</span>
+                <span style={{ width: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#5B6570' }}>
+                  <item.Icon />
+                </span>
                 <span style={{ flex: 1, fontSize: 14, color: '#0F1419', fontWeight: 500 }}>
                   {item.label}
                 </span>

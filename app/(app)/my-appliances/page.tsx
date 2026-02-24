@@ -1,10 +1,10 @@
 import Link from 'next/link'
 import Badge, { WarrantyStatus } from '@/components/ui/Badge'
+import { ApplianceIcon } from '@/components/ui/ApplianceIcon'
 
 const appliances = [
   {
     id: '1',
-    emoji: '❄️',
     name: 'エアコン',
     model: 'CS-X402D2',
     brand: 'Panasonic',
@@ -13,7 +13,6 @@ const appliances = [
   },
   {
     id: '2',
-    emoji: '🧺',
     name: '全自動洗濯機',
     model: 'NA-VX900BL',
     brand: 'Panasonic',
@@ -22,7 +21,6 @@ const appliances = [
   },
   {
     id: '3',
-    emoji: '📺',
     name: '液晶テレビ',
     model: 'TH-65LX950',
     brand: 'Panasonic',
@@ -31,7 +29,6 @@ const appliances = [
   },
   {
     id: '4',
-    emoji: '❄️',
     name: '冷蔵庫',
     model: 'NR-F605WPX',
     brand: 'Panasonic',
@@ -89,11 +86,11 @@ export default function MyAppliancesPage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: 22,
+                  color: '#0F1419',
                   flexShrink: 0,
                 }}
               >
-                {item.emoji}
+                <ApplianceIcon type={item.name} size={24} />
               </div>
 
               {/* Info */}

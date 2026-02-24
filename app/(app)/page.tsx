@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { ApplianceIcon } from '@/components/ui/ApplianceIcon'
 
 const suggestChips = [
   '洗濯機が動かない',
@@ -13,9 +14,9 @@ const suggestChips = [
 ]
 
 const recentConsultations = [
-  { emoji: '❄️', name: 'エアコン AN40YRS', date: '昨日' },
-  { emoji: '🧺', name: '洗濯機 NA-VX900BL', date: '3日前' },
-  { emoji: '📺', name: 'テレビ TH-65LX950', date: '1週間前' },
+  { type: 'エアコン', name: 'エアコン AN40YRS', date: '昨日' },
+  { type: '洗濯機', name: '洗濯機 NA-VX900BL', date: '3日前' },
+  { type: 'テレビ', name: 'テレビ TH-65LX950', date: '1週間前' },
 ]
 
 export default function HomePage() {
@@ -177,7 +178,9 @@ export default function HomePage() {
                 textDecoration: 'none',
               }}
             >
-              <span style={{ fontSize: 20 }}>{item.emoji}</span>
+              <div style={{ width: 24, height: 24, color: '#0F1419', flexShrink: 0 }}>
+                <ApplianceIcon type={item.type} size={24} />
+              </div>
               <span
                 style={{
                   flex: 1,
