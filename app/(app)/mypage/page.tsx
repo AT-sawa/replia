@@ -6,11 +6,11 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
 const menuItems = [
-  { icon: '🔔', label: '通知設定', href: null },
+  { icon: '🔔', label: '通知設定', href: '/notifications' },
   { icon: '📋', label: '相談履歴', href: '/chat' },
-  { icon: '🔒', label: 'アカウント設定', href: null },
-  { icon: '❓', label: 'ヘルプ・よくある質問', href: null },
-  { icon: '📝', label: '利用規約', href: null },
+  { icon: '🔒', label: 'アカウント設定', href: '/account' },
+  { icon: '❓', label: 'ヘルプ・よくある質問', href: '/help' },
+  { icon: '📝', label: '利用規約', href: '/terms' },
 ]
 
 export default function MyPage() {
