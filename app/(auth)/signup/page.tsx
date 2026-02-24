@@ -5,35 +5,73 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
-export default function LoginPage() {
+export default function SignupPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [done, setDone] = useState(false)
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
     setLoading(true)
 
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { error } = await supabase.auth.signUp({ email, password })
 
     setLoading(false)
     if (error) {
-      if (error.message.includes('Invalid login credentials')) {
-        setError('メールアドレスまたはパスワードが正しくありません')
-      } else if (error.message.includes('Email not confirmed')) {
-        setError('メールアドレスの確認が完了していません。届いたメールのリンクをクリックしてください')
-      } else {
-        setError(error.message)
-      }
+      setError(error.message)
       return
     }
+    setDone(true)
+  }
 
-    router.push('/')
-    router.refresh()
+  if (done) {
+    return (
+      <div
+        style={{ background: '#0F1419', minHeight: '100vh' }}
+        className="flex items-center justify-center p-5"
+      >
+        <div
+          style={{
+            background: 'white',
+            borderRadius: 20,
+            padding: 40,
+            width: '100%',
+            maxWidth: 310,
+            textAlign: 'center',
+          }}
+        >
+          <div style={{ fontSize: 48, marginBottom: 16 }}>📧</div>
+          <p style={{ fontSize: 18, fontWeight: 700, color: '#0F1419', marginBottom: 8 }}>
+            確認メールを送信しました
+          </p>
+          <p style={{ fontSize: 13, color: '#98A2AE', lineHeight: 1.7, marginBottom: 24 }}>
+            <strong>{email}</strong> に確認メールを送りました。
+            メール内の「Confirm your email」をクリックしてからログインしてください。
+          </p>
+          <Link
+            href="/login"
+            style={{
+              display: 'block',
+              background: '#0F1419',
+              color: 'white',
+              borderRadius: 100,
+              height: 50,
+              lineHeight: '50px',
+              fontSize: 15,
+              fontWeight: 700,
+              textDecoration: 'none',
+            }}
+          >
+            ログイン画面へ
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -64,7 +102,7 @@ export default function LoginPage() {
             replia
           </span>
           <p style={{ fontSize: 13, color: '#98A2AE', marginTop: 6 }}>
-            家電サポートAIアシスタント
+            アカウントを新規作成
           </p>
         </div>
 
@@ -78,14 +116,13 @@ export default function LoginPage() {
               fontSize: 13,
               color: '#DC2626',
               marginBottom: 16,
-              lineHeight: 1.6,
             }}
           >
             {error}
           </div>
         )}
 
-        <form onSubmit={handleLogin} className="flex flex-col gap-3">
+        <form onSubmit={handleSignup} className="flex flex-col gap-3">
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>
               メールアドレス
@@ -107,7 +144,7 @@ export default function LoginPage() {
 
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>
-              パスワード
+              パスワード（6文字以上）
             </label>
             <input
               type="password"
@@ -115,6 +152,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
+              minLength={6}
               style={{
                 width: '100%', height: 46,
                 border: '1.5px solid #E8ECF0', borderRadius: 10,
@@ -135,14 +173,14 @@ export default function LoginPage() {
               opacity: loading ? 0.7 : 1, marginTop: 8, width: '100%',
             }}
           >
-            {loading ? 'ログイン中...' : 'ログイン'}
+            {loading ? '登録中...' : 'アカウントを作成'}
           </button>
         </form>
 
         <p style={{ fontSize: 13, color: '#98A2AE', textAlign: 'center', marginTop: 20 }}>
-          アカウントをお持ちでない方は{' '}
-          <Link href="/signup" style={{ color: '#0F1419', fontWeight: 700, textDecoration: 'underline' }}>
-            新規登録
+          すでにアカウントをお持ちの方は{' '}
+          <Link href="/login" style={{ color: '#0F1419', fontWeight: 700, textDecoration: 'underline' }}>
+            ログイン
           </Link>
         </p>
       </div>
