@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --black: #0F1419;
+  --gray-500: #5B6570;
+  --gray-300: #98A2AE;
+  --gray-100: #F4F6F8;
+  --gray-50: #FAFBFC;
+  --border: #E8ECF0;
+  --blue: #2563EB;
+  --green: #059669;
+  --red: #DC2626;
+  --amber: #D97706;
+  --white: #FFFFFF;
+  --shadow-sm: 0 1px 4px rgba(15, 20, 25, 0.06);
+  --shadow-md: 0 4px 16px rgba(15, 20, 25, 0.10);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 100px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'DM Sans', 'Zen Kaku Gothic New', sans-serif;
+  background-color: #ECEEF1;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+}
+
+/* Welcome card decorative circles */
+.welcome-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-card::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.04);
+  pointer-events: none;
+}
+
+.welcome-card::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: 30px;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  pointer-events: none;
+}
+
+/* Scrollable area */
+.chat-scroll {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.chat-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
+}
