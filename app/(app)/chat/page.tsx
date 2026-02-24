@@ -17,7 +17,7 @@ const WELCOME: Message = {
   content: 'こんにちは！replia AIサポートです。\n家電のトラブルについて、何でもご相談ください。製品名や症状をお聞かせいただけますか？',
 }
 
-// ── per-product key wrapper ──────────────────────────────
+// ── per-product key wrapper ──────────────────────────────────────────────────
 function ChatWithKey() {
   const searchParams = useSearchParams()
   const productId = searchParams.get('productId')
@@ -26,7 +26,28 @@ function ChatWithKey() {
   return <ChatContent key={chatKey} />
 }
 
-// ── main chat UI ─────────────────────────────────────────
+// ── Typing indicator ─────────────────────────────────────────────────────────
+function TypingIndicator() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+      <div style={{
+        background: 'white', border: '1px solid #E8ECF0',
+        borderRadius: '4px 14px 14px 14px',
+        padding: '12px 16px', display: 'flex', gap: 4, alignItems: 'center',
+      }}>
+        {[0, 1, 2].map(i => (
+          <div key={i} style={{
+            width: 7, height: 7, borderRadius: '50%', background: '#C5CAD0',
+            animation: 'bounce 1.2s infinite',
+            animationDelay: `${i * 0.2}s`,
+          }} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ── main chat UI ─────────────────────────────────────────────────────────────
 function ChatContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -38,56 +59,81 @@ function ChatContent() {
 
   const [messages, setMessages] = useState<Message[]>([WELCOME])
   const [input, setInput]       = useState('')
+  const [loading, setLoading]   = useState(false)
   const [autoSent, setAutoSent] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, loading])
 
-  // auto-send query param once on mount
+  const productInfo = productName
+    ? { name: productName, brand: brandName ?? '', model: modelName ?? '' }
+    : undefined
+
+  const sendMessage = async (text: string, currentMessages: Message[]) => {
+    if (!text.trim() || loading) return
+    const userMsg: Message = { id: Date.now().toString(), role: 'user', content: text.trim() }
+    const updatedMessages = [...currentMessages, userMsg]
+    setMessages(updatedMessages)
+    setLoading(true)
+
+    try {
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: updatedMessages
+            .filter(m => m.id !== 'welcome')
+            .map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content })),
+          productInfo,
+        }),
+      })
+      const data = await res.json()
+      const aiMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: data.reply ?? 'ご質問を承りました。',
+        source: productName ? `${brandName ?? ''} 取扱説明書` : undefined,
+      }
+      setMessages(prev => [...prev, aiMsg])
+    } catch {
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'エラーが発生しました。もう一度お試しください。',
+      }])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // auto-send query param on mount
   useEffect(() => {
     if (!query || autoSent) return
     setAutoSent(true)
-    const timer1 = setTimeout(() => {
-      const userMsg: Message = { id: 'auto-user', role: 'user', content: query }
-      setMessages(prev => [...prev, userMsg])
-      const timer2 = setTimeout(() => {
-        const aiMsg: Message = {
-          id: 'auto-ai',
-          role: 'assistant',
-          content: `「${query}」について承りました。\n症状やエラーコードなど、もう少し詳しく教えていただけますか？`,
-        }
-        setMessages(prev => [...prev, aiMsg])
-      }, 1000)
-      return () => clearTimeout(timer2)
+    const timer = setTimeout(() => {
+      sendMessage(query, [WELCOME])
     }, 400)
-    return () => clearTimeout(timer1)
+    return () => clearTimeout(timer)
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleSend = () => {
-    if (!input.trim()) return
-    const userMsg: Message = { id: Date.now().toString(), role: 'user', content: input.trim() }
-    setMessages(prev => [...prev, userMsg])
+    if (!input.trim() || loading) return
+    const text = input.trim()
     setInput('')
-    setTimeout(() => {
-      const aiMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: 'ご確認ありがとうございます。いくつかの点を確認してみてください。\n\n① フィルター・通気口の清掃を行ってください\n② 電源を一度切り、数分後に再起動してください\n③ 改善しない場合はエラーコードをお知らせください',
-        source: productName ? `${brandName ?? ''} 取扱説明書` : undefined,
-      }
-      setMessages(prev => [...prev, aiMsg])
-    }, 1200)
+    sendMessage(text, messages)
   }
 
-  // header display
   const headerTitle    = productName ? (modelName ? `${productName} ${modelName}` : productName) : 'AIサポート'
   const headerSubtitle = productName ? (brandName ?? '') : 'replia'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+
+      {/* keyframe for bounce */}
+      <style>{`@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}`}</style>
 
       {/* ── Product / context bar ── */}
       <div style={{
@@ -156,32 +202,39 @@ function ChatContent() {
           </div>
         ))}
 
+        {/* typing indicator */}
+        {loading && <TypingIndicator />}
+
         {/* Quick actions */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
-          {['症状を詳しく教える', 'エラーコードを確認'].map(label => (
+        {!loading && (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 }}>
+            {['症状を詳しく教える', 'エラーコードを確認'].map(label => (
+              <button
+                key={label}
+                onClick={() => {
+                  setInput(label)
+                }}
+                style={{
+                  border: '1.5px solid #E8ECF0', borderRadius: 100, height: 36,
+                  padding: '0 14px', fontSize: 12, color: '#0F1419',
+                  background: 'white', cursor: 'pointer', fontWeight: 500,
+                }}
+              >
+                {label}
+              </button>
+            ))}
             <button
-              key={label}
-              onClick={() => setInput(label)}
+              onClick={() => router.push('/escalation')}
               style={{
-                border: '1.5px solid #E8ECF0', borderRadius: 100, height: 36,
-                padding: '0 14px', fontSize: 12, color: '#0F1419',
-                background: 'white', cursor: 'pointer', fontWeight: 500,
+                border: '1.5px solid #FFCDD2', borderRadius: 100, height: 36,
+                padding: '0 14px', fontSize: 12, color: '#DC2626',
+                background: '#FFEBEE', cursor: 'pointer', fontWeight: 500,
               }}
             >
-              {label}
+              修理依頼
             </button>
-          ))}
-          <button
-            onClick={() => router.push('/escalation')}
-            style={{
-              border: '1.5px solid #FFCDD2', borderRadius: 100, height: 36,
-              padding: '0 14px', fontSize: 12, color: '#DC2626',
-              background: '#FFEBEE', cursor: 'pointer', fontWeight: 500,
-            }}
-          >
-            修理依頼
-          </button>
-        </div>
+          </div>
+        )}
 
         <div ref={bottomRef} />
       </div>
@@ -196,19 +249,25 @@ function ChatContent() {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleSend()}
-          placeholder="メッセージを入力..."
+          placeholder={loading ? 'AIが回答中...' : 'メッセージを入力...'}
+          disabled={loading}
           style={{
             flex: 1, height: 44, background: '#F4F6F8', border: 'none',
             borderRadius: 22, padding: '0 16px', fontSize: 14, color: '#0F1419',
             fontFamily: "'Zen Kaku Gothic New', sans-serif",
+            opacity: loading ? 0.6 : 1,
           }}
         />
         <button
           onClick={handleSend}
+          disabled={loading || !input.trim()}
           style={{
-            width: 42, height: 42, background: '#0F1419', borderRadius: '50%',
-            border: 'none', display: 'flex', alignItems: 'center',
-            justifyContent: 'center', cursor: 'pointer', flexShrink: 0,
+            width: 42, height: 42,
+            background: loading || !input.trim() ? '#C5CAD0' : '#0F1419',
+            borderRadius: '50%', border: 'none',
+            display: 'flex', alignItems: 'center',
+            justifyContent: 'center', cursor: loading ? 'not-allowed' : 'pointer',
+            flexShrink: 0, transition: 'background 0.15s',
           }}
         >
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">

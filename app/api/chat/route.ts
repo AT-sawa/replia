@@ -1,68 +1,88 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { sendChatMessage } from '@/lib/n8n/webhook'
+
+interface ChatMessage {
+  role: 'user' | 'assistant'
+  content: string
+}
+
+interface ProductInfo {
+  name?: string
+  brand?: string
+  model?: string
+}
 
 export async function POST(request: NextRequest) {
   try {
     const supabase = createClient()
-
-    // 認証確認
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { conversationId, message, productInfo } = await request.json()
+    const { messages, productInfo }: { messages: ChatMessage[]; productInfo?: ProductInfo } =
+      await request.json()
 
-    if (!conversationId || !message) {
-      return NextResponse.json({ error: 'conversationId and message are required' }, { status: 400 })
+    if (!messages || messages.length === 0) {
+      return NextResponse.json({ error: 'messages is required' }, { status: 400 })
     }
 
-    // ユーザーメッセージをDBに保存
-    const { error: insertError } = await supabase
-      .from('messages')
-      .insert({
-        conversation_id: conversationId,
-        role: 'user',
-        content: message,
-      })
-
-    if (insertError) {
-      console.error('Failed to save user message:', insertError)
-      return NextResponse.json({ error: 'Failed to save message' }, { status: 500 })
+    const openaiKey = process.env.OPENAI_API_KEY
+    if (!openaiKey) {
+      return NextResponse.json({ reply: 'AIサービスの設定が完了していません。' })
     }
 
-    // n8n webhookにメッセージを送信してAI応答を取得
-    let aiResponse: string
-    try {
-      const webhookResult = await sendChatMessage(conversationId, message, productInfo) as { reply?: string; content?: string }
-      aiResponse = webhookResult?.reply ?? webhookResult?.content ?? 'ご質問を承りました。しばらくお待ちください。'
-    } catch (webhookError) {
-      console.error('n8n webhook error:', webhookError)
-      aiResponse = 'AIサービスに接続できませんでした。しばらくしてから再試行してください。'
-    }
+    const productContext = productInfo?.name
+      ? `【対象製品】${productInfo.brand ?? ''} ${productInfo.name} ${productInfo.model ?? ''}`
+      : ''
 
-    // AI応答をDBに保存
-    const { data: savedReply, error: replyError } = await supabase
-      .from('messages')
-      .insert({
-        conversation_id: conversationId,
-        role: 'assistant',
-        content: aiResponse,
-      })
-      .select()
-      .single()
+    const systemPrompt = `あなたは「replia」というAI家電サポートアシスタントです。日本の家電製品のトラブル解決を専門としています。
+${productContext}
 
-    if (replyError) {
-      console.error('Failed to save AI reply:', replyError)
-    }
+以下のガイドラインで回答してください：
+- 日本語で丁寧かつ簡潔に回答する
+- ユーザーが自分で試せる具体的な手順を①②③のように番号で説明する
+- エラーコードや症状に応じた具体的なアドバイスをする
+- 解決しない場合は「🔧 修理依頼」ボタンを使うよう案内する
+- 500文字以内で回答する
+- 同じ答えを繰り返さず、会話の流れに合わせて回答を変える`
 
-    return NextResponse.json({
-      reply: aiResponse,
-      message: savedReply,
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...messages.map((m: ChatMessage) => ({
+            role: m.role === 'assistant' ? 'assistant' : 'user',
+            content: m.content,
+          })),
+        ],
+        max_tokens: 600,
+        temperature: 0.7,
+      }),
     })
+
+    if (!response.ok) {
+      const errBody = await response.text()
+      console.error('OpenAI API error:', response.status, errBody)
+      return NextResponse.json({
+        reply: 'AIサービスに一時的な問題が発生しました。しばらくしてから再試行してください。',
+      })
+    }
+
+    const data = await response.json()
+    const reply: string = data.choices?.[0]?.message?.content ?? 'ご質問を承りました。'
+
+    return NextResponse.json({ reply })
   } catch (error) {
     console.error('Chat API error:', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return NextResponse.json({
+      reply: 'エラーが発生しました。もう一度お試しください。',
+    })
   }
 }

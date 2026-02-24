@@ -74,8 +74,10 @@ export default function TabBar() {
         paddingTop: 8,
         paddingBottom: 20,
         flexShrink: 0,
+        display: 'flex',
+        alignItems: 'flex-start',
+        width: '100%',
       }}
-      className="flex items-start w-full"
     >
       {tabs.map((tab) => {
         const isActive =
@@ -87,7 +89,14 @@ export default function TabBar() {
           <Link
             key={tab.href}
             href={tab.href}
-            className="flex-1 flex flex-col items-center gap-0.5"
+            style={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 2,
+              textDecoration: 'none',
+            }}
           >
             {tab.icon(isActive)}
             <span
