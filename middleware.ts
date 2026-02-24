@@ -8,10 +8,15 @@ export async function middleware(request: NextRequest) {
     },
   })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  // Supabase環境変数が未設定の場合はミドルウェアをスキップ
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return response
+  }
+
+  try {
+    const supabase = createServerClient(supabaseUrl, supabaseAnonKey, {
       cookies: {
         get(name: string) {
           return request.cookies.get(name)?.value
@@ -25,24 +30,25 @@ export async function middleware(request: NextRequest) {
           response.cookies.set({ name, value: '', ...options })
         },
       },
+    })
+
+    const { data: { user } } = await supabase.auth.getUser()
+
+    const isAuthRoute = request.nextUrl.pathname.startsWith('/login')
+    const isApiRoute  = request.nextUrl.pathname.startsWith('/api')
+
+    // 未ログイン → ログインページへリダイレクト
+    if (!user && !isAuthRoute && !isApiRoute) {
+      return NextResponse.redirect(new URL('/login', request.url))
     }
-  )
 
-  const { data: { user } } = await supabase.auth.getUser()
-
-  // 未ログイン時にアプリページへのアクセスはログインページにリダイレクト
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/login')
-  const isApiRoute = request.nextUrl.pathname.startsWith('/api')
-
-  if (!user && !isAuthRoute && !isApiRoute) {
-    const loginUrl = new URL('/login', request.url)
-    return NextResponse.redirect(loginUrl)
-  }
-
-  // ログイン済みでログインページにアクセスした場合はホームにリダイレクト
-  if (user && isAuthRoute) {
-    const homeUrl = new URL('/', request.url)
-    return NextResponse.redirect(homeUrl)
+    // ログイン済みでログインページ → ホームへリダイレクト
+    if (user && isAuthRoute) {
+      return NextResponse.redirect(new URL('/', request.url))
+    }
+  } catch (e) {
+    // Supabase接続エラー時はスキップして通常レスポンスを返す
+    console.error('Middleware Supabase error:', e)
   }
 
   return response
@@ -50,12 +56,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * 以下を除くすべてのパスにマッチ:
-     * - _next/static (静的ファイル)
-     * - _next/image (画像最適化)
-     * - favicon.ico
-     */
     '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 }
