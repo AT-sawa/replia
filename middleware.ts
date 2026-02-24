@@ -34,15 +34,16 @@ export async function middleware(request: NextRequest) {
 
     const { data: { user } } = await supabase.auth.getUser()
 
-    const isAuthRoute = request.nextUrl.pathname.startsWith('/login')
-    const isApiRoute  = request.nextUrl.pathname.startsWith('/api')
+    const pathname = request.nextUrl.pathname
+    const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/signup')
+    const isApiRoute  = pathname.startsWith('/api')
 
     // 未ログイン → ログインページへリダイレクト
     if (!user && !isAuthRoute && !isApiRoute) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
 
-    // ログイン済みでログインページ → ホームへリダイレクト
+    // ログイン済みで認証ページ → ホームへリダイレクト
     if (user && isAuthRoute) {
       return NextResponse.redirect(new URL('/', request.url))
     }
