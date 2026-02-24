@@ -12,12 +12,23 @@ interface QuickActionsProps {
 
 export default function QuickActions({ actions, onSelect }: QuickActionsProps) {
   return (
-    <div className="flex flex-wrap gap-2 px-4 py-2">
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
       {actions.map((action) => (
         <button
           key={action.value}
           onClick={() => onSelect(action.value)}
-          className="px-3 py-1.5 text-sm bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+          style={{
+            border: '1.5px solid #E8ECF0',
+            borderRadius: 100,
+            height: 36,
+            padding: '0 14px',
+            fontSize: 12,
+            color: '#0F1419',
+            background: 'white',
+            cursor: 'pointer',
+            fontWeight: 500,
+            fontFamily: "'Zen Kaku Gothic New', sans-serif",
+          }}
         >
           {action.label}
         </button>
