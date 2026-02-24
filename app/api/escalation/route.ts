@@ -53,7 +53,13 @@ export async function POST(request: NextRequest) {
       .eq('id', conversationId)
 
     // ユーザー製品情報を取得
-    let userProductInfo = { userProductId: userProductId ?? '' }
+    let userProductInfo: {
+      userProductId: string
+      productName?: string
+      modelNumber?: string
+      purchaseDate?: string | null
+      warrantyEnd?: string | null
+    } = { userProductId: userProductId ?? '' }
     if (userProductId) {
       const { data: up } = await supabase
         .from('user_products')
