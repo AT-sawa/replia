@@ -122,6 +122,7 @@ export default function HomePage() {
           {/* QR Button */}
           <button
             type="button"
+            onClick={() => router.push('/register')}
             style={{
               width: 32,
               height: 32,

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import Badge from '@/components/ui/Badge'
 
 interface Message {
@@ -104,6 +104,7 @@ function ProductConfirmCard({ onConfirm, onDeny }: { onConfirm: () => void; onDe
 
 function ChatContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const initialQuery = searchParams.get('query')
   const [messages, setMessages] = useState<Message[]>(initialMessages)
   const [input, setInput] = useState(initialQuery || '')
@@ -260,6 +261,22 @@ function ChatContent() {
                 {label}
               </button>
             ))}
+            <button
+              onClick={() => router.push('/escalation')}
+              style={{
+                border: '1.5px solid #FFCDD2',
+                borderRadius: 100,
+                height: 36,
+                padding: '0 14px',
+                fontSize: 12,
+                color: '#DC2626',
+                background: '#FFEBEE',
+                cursor: 'pointer',
+                fontWeight: 500,
+              }}
+            >
+              🔧 修理依頼
+            </button>
           </div>
         )}
 
