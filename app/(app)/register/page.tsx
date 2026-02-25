@@ -3,11 +3,19 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 
+const APPLIANCE_TYPES = [
+  'エアコン', '洗濯機', '冷蔵庫', 'テレビ', '電子レンジ',
+  '食洗機', '掃除機', '炊飯器', 'ドライヤー', 'その他',
+]
+
 export default function RegisterPage() {
   const router = useRouter()
+  const [applianceType, setApplianceType] = useState('')
+  const [brand, setBrand] = useState('')
   const [modelNumber, setModelNumber] = useState('')
   const [purchaseDate, setPurchaseDate] = useState('')
   const [storeName, setStoreName] = useState('')
+  const [saveError, setSaveError] = useState('')
   const [submitted, setSubmitted] = useState(false)
 
   // Receipt scanner
@@ -123,9 +131,32 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSaveError('')
     setSubmitted(true)
-    await new Promise((r) => setTimeout(r, 800))
-    router.push('/my-appliances')
+    try {
+      const res = await fetch('/api/appliances', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          appliance_type:  applianceType || 'その他',
+          brand,
+          model:           modelNumber,
+          purchase_date:   purchaseDate || null,
+          warranty_months: 12,
+          store_name:      storeName,
+        }),
+      })
+      if (!res.ok) {
+        const d = await res.json()
+        setSaveError(d.error ?? '保存に失敗しました')
+        setSubmitted(false)
+        return
+      }
+      router.push('/my-appliances')
+    } catch {
+      setSaveError('保存に失敗しました。もう一度お試しください。')
+      setSubmitted(false)
+    }
   }
 
   return (
@@ -172,16 +203,16 @@ export default function RegisterPage() {
         <div style={{ background: 'white', border: '1px solid #E8ECF0', borderRadius: 12, padding: 14, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 1px 4px rgba(15,20,25,0.06)' }}>
           <div style={{ width: 44, height: 44, background: '#F4F6F8', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <rect x="2" y="3" width="20" height="14" rx="2" stroke="#98A2AE" strokeWidth="1.5" />
-              <path d="M8 21H16M12 17V21" stroke="#98A2AE" strokeWidth="1.5" strokeLinecap="round" />
+              <rect x="2" y="3" width="20" height="14" rx="2" stroke={applianceType ? '#0F1419' : '#C5CAD0'} strokeWidth="1.5" />
+              <path d="M8 21H16M12 17V21" stroke={applianceType ? '#0F1419' : '#C5CAD0'} strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </div>
-          <div>
-            <p style={{ fontSize: 14, fontWeight: 700, color: modelNumber ? '#0F1419' : '#C5CAD0', margin: 0 }}>
-              {modelNumber || '型番を入力してください'}
+          <div style={{ minWidth: 0 }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: applianceType ? '#0F1419' : '#C5CAD0', margin: 0 }}>
+              {applianceType ? `${applianceType}${brand ? ` · ${brand}` : ''}` : '製品の種類を選択してください'}
             </p>
-            <p style={{ fontSize: 12, color: '#C5CAD0', margin: '2px 0 0' }}>
-              {purchaseDate ? `購入日: ${purchaseDate}` : '購入日・店舗を入力してください'}
+            <p style={{ fontSize: 12, color: modelNumber ? '#5B6570' : '#C5CAD0', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {modelNumber || '型番を入力してください'}
             </p>
           </div>
         </div>
@@ -231,6 +262,40 @@ export default function RegisterPage() {
         </button>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 16 }}>
+
+          {/* Appliance Type */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>製品の種類 <span style={{ color: '#DC2626' }}>*</span></label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {APPLIANCE_TYPES.map(t => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setApplianceType(t)}
+                  style={{
+                    height: 32, padding: '0 12px', borderRadius: 100,
+                    border: applianceType === t ? 'none' : '1px solid #E8ECF0',
+                    background: applianceType === t ? '#0F1419' : 'white',
+                    color: applianceType === t ? 'white' : '#5B6570',
+                    fontSize: 12, fontWeight: applianceType === t ? 600 : 400,
+                    cursor: 'pointer',
+                  }}
+                >{t}</button>
+              ))}
+            </div>
+          </div>
+
+          {/* Brand */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>ブランド・メーカー</label>
+            <input
+              type="text"
+              value={brand}
+              onChange={(e) => setBrand(e.target.value)}
+              placeholder="例：Panasonic, SHARP, HITACHI"
+              style={{ width: '100%', height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 14px', fontSize: 14, color: '#0F1419', background: 'white', fontFamily: "'Zen Kaku Gothic New', sans-serif", boxSizing: 'border-box' }}
+            />
+          </div>
 
           {/* Model Number + Barcode Scan */}
           <div>
@@ -313,6 +378,11 @@ export default function RegisterPage() {
           </div>
         </div>
 
+        {saveError && (
+          <p style={{ fontSize: 12, color: '#DC2626', textAlign: 'center', marginBottom: 8, marginTop: -4 }}>
+            {saveError}
+          </p>
+        )}
         <button type="submit" disabled={submitted} style={{ background: '#0F1419', color: 'white', width: '100%', height: 50, borderRadius: 100, border: 'none', fontSize: 15, fontWeight: 700, cursor: submitted ? 'not-allowed' : 'pointer', opacity: submitted ? 0.7 : 1 }}>
           {submitted ? '登録中...' : '保証登録を完了する'}
         </button>

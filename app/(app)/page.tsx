@@ -120,25 +120,26 @@ export default function HomePage() {
             }}
           />
 
-          {/* 家電追加ボタン */}
+          {/* 送信ボタン */}
           <button
-            type="button"
-            onClick={() => router.push('/register')}
+            type="submit"
+            disabled={!searchQuery.trim()}
             style={{
-              width: 32,
-              height: 32,
-              background: '#0F1419',
+              width: 34,
+              height: 34,
+              background: searchQuery.trim() ? '#0F1419' : '#C5CAD0',
               borderRadius: '50%',
               border: 'none',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              cursor: 'pointer',
+              cursor: searchQuery.trim() ? 'pointer' : 'default',
               flexShrink: 0,
+              transition: 'background 0.15s',
             }}
           >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 3V13M3 8H13" stroke="white" strokeWidth="2" strokeLinecap="round" />
+            <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+              <path d="M16 9L2 2L5.5 9L2 16L16 9Z" fill="white" stroke="white" strokeWidth="1.5" strokeLinejoin="round" />
             </svg>
           </button>
         </div>
