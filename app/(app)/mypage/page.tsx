@@ -49,14 +49,42 @@ const menuItems = [
 export default function MyPage() {
   const router = useRouter()
   const [email, setEmail] = useState<string | null>(null)
+  const [displayName, setDisplayName] = useState<string>('')
+  const [editing, setEditing] = useState(false)
+  const [tempName, setTempName] = useState('')
+  const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data }) => {
-      setEmail(data.user?.email ?? null)
+      const user = data.user
+      if (!user) return
+      setEmail(user.email ?? null)
+      const name = user.user_metadata?.full_name || user.email?.split('@')[0] || ''
+      setDisplayName(name)
     })
   }, [])
+
+  const handleEditStart = () => {
+    setTempName(displayName)
+    setEditing(true)
+  }
+
+  const handleSaveName = async () => {
+    const trimmed = tempName.trim()
+    if (!trimmed) return
+    setSaving(true)
+    const supabase = createClient()
+    const { error } = await supabase.auth.updateUser({
+      data: { full_name: trimmed },
+    })
+    setSaving(false)
+    if (!error) {
+      setDisplayName(trimmed)
+      setEditing(false)
+    }
+  }
 
   const handleLogout = async () => {
     setLoading(true)
@@ -90,6 +118,7 @@ export default function MyPage() {
               width: 56, height: 56, background: '#0F1419',
               borderRadius: '50%', display: 'flex',
               alignItems: 'center', justifyContent: 'center', fontSize: 24,
+              flexShrink: 0,
             }}
           >
             <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
@@ -97,13 +126,76 @@ export default function MyPage() {
               <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           </div>
-          <div>
-            <p style={{ fontSize: 16, fontWeight: 700, color: '#0F1419', margin: 0 }}>
-              {email ? email.split('@')[0] : '読み込み中...'}
-            </p>
-            <p style={{ fontSize: 12, color: '#98A2AE', margin: '2px 0 0' }}>
-              {email ?? ''}
-            </p>
+
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {editing ? (
+              /* 名前編集モード */
+              <div>
+                <input
+                  autoFocus
+                  value={tempName}
+                  onChange={(e) => setTempName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSaveName()}
+                  placeholder="名前を入力"
+                  style={{
+                    width: '100%', height: 36,
+                    border: '1.5px solid #0F1419', borderRadius: 8,
+                    padding: '0 10px', fontSize: 14, color: '#0F1419',
+                    background: '#FAFBFC', marginBottom: 8,
+                    fontFamily: "'Zen Kaku Gothic New', sans-serif",
+                  }}
+                />
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={handleSaveName}
+                    disabled={saving || !tempName.trim()}
+                    style={{
+                      flex: 1, height: 30, background: '#0F1419', color: 'white',
+                      border: 'none', borderRadius: 100, fontSize: 12, fontWeight: 700,
+                      cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1,
+                    }}
+                  >
+                    {saving ? '保存中...' : '保存'}
+                  </button>
+                  <button
+                    onClick={() => setEditing(false)}
+                    style={{
+                      flex: 1, height: 30, background: 'white', color: '#5B6570',
+                      border: '1px solid #E8ECF0', borderRadius: 100, fontSize: 12,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    キャンセル
+                  </button>
+                </div>
+              </div>
+            ) : (
+              /* 表示モード */
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ fontSize: 16, fontWeight: 700, color: '#0F1419', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {displayName || '読み込み中...'}
+                  </p>
+                  <p style={{ fontSize: 12, color: '#98A2AE', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {email ?? ''}
+                  </p>
+                </div>
+                {/* 編集ボタン */}
+                <button
+                  onClick={handleEditStart}
+                  style={{
+                    width: 28, height: 28, background: '#F4F6F8', border: 'none',
+                    borderRadius: '50%', display: 'flex', alignItems: 'center',
+                    justifyContent: 'center', cursor: 'pointer', flexShrink: 0,
+                  }}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                    <path d="M11 4H4C2.9 4 2 4.9 2 6v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7" stroke="#5B6570" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5Z" stroke="#5B6570" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import Badge, { WarrantyStatus } from '@/components/ui/Badge'
 import { ProductImage } from '@/components/ui/ProductImage'
 import { formatDaysRemaining } from '@/lib/utils'
+import { DocumentUpload } from '@/components/ui/DocumentUpload'
 
 const products: Record<
   string,
@@ -31,7 +32,7 @@ const products: Record<
     daysLeft: 284,
     totalDays: 365,
     store: 'ヨドバシカメラ 新宿店',
-    manualUrl: 'https://www.google.com/search?q=Panasonic+CS-X402D2+取扱説明書',
+    manualUrl: 'https://panasonic.net/cns/sav/products/aircon/cs_x402d2/',
     imageUrl: 'https://img1.kakaku.k-img.com/images/productimage/l/K0001387191.jpg',
   },
   '2': {
@@ -45,7 +46,7 @@ const products: Record<
     daysLeft: 28,
     totalDays: 365,
     store: 'ビックカメラ 渋谷店',
-    manualUrl: 'https://www.google.com/search?q=Panasonic+NA-VX900BL+取扱説明書',
+    manualUrl: 'https://panasonic.net/cns/sav/products/washingmachines/na-vx900bl/',
     imageUrl: 'https://img1.kakaku.k-img.com/images/productimage/l/J0000033345.jpg',
   },
   '3': {
@@ -59,7 +60,7 @@ const products: Record<
     daysLeft: 0,
     totalDays: 365,
     store: 'Amazon',
-    manualUrl: 'https://www.google.com/search?q=Panasonic+TH-65LX950+取扱説明書',
+    manualUrl: 'https://panasonic.net/cns/sav/products/televisions/th-65lx950/',
     imageUrl: 'https://img1.kakaku.k-img.com/images/productimage/l/K0001435839.jpg',
   },
   '4': {
@@ -73,7 +74,7 @@ const products: Record<
     daysLeft: 512,
     totalDays: 1825,
     store: 'ヨドバシカメラ 秋葉原店',
-    manualUrl: 'https://www.google.com/search?q=Panasonic+NR-F605WPX+取扱説明書',
+    manualUrl: 'https://panasonic.net/cns/sav/products/refrigerators/nr-f605wpx/',
     imageUrl: 'https://img1.kakaku.k-img.com/images/productimage/l/J0000029607.jpg',
   },
 }
@@ -166,15 +167,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3.5L8.5 7L5 10.5" stroke="#C5CAD0" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </a>
             {['保証書', '領収書'].map(doc => (
-              <div key={doc} style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#F4F6F8', borderRadius: 8, padding: '10px 12px' }}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M10 1H3C2.4 1 2 1.4 2 2V14C2 14.6 2.4 15 3 15H13C13.6 15 14 14.6 14 14V5L10 1Z" stroke="#C5CAD0" strokeWidth="1.2" strokeLinejoin="round" />
-                  <path d="M10 1V5H14" stroke="#C5CAD0" strokeWidth="1.2" strokeLinejoin="round" />
-                  <path d="M5 9H11M5 12H8" stroke="#C5CAD0" strokeWidth="1.2" strokeLinecap="round" />
-                </svg>
-                <span style={{ fontSize: 13, color: '#98A2AE', flex: 1 }}>{doc}</span>
-                <span style={{ fontSize: 10, color: '#C5CAD0', background: '#ECEEF0', borderRadius: 100, padding: '2px 8px' }}>未登録</span>
-              </div>
+              <DocumentUpload key={doc} docName={doc} />
             ))}
           </div>
         </div>
