@@ -22,9 +22,7 @@ export default function RootLayout({
         />
       </head>
       <body>
-        <div className="w-full max-w-[390px] min-h-screen bg-white relative mx-auto">
-          {children}
-        </div>
+        {children}
       </body>
     </html>
   )

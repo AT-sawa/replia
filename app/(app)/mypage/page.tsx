@@ -5,6 +5,13 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 
+const IconUsers = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+)
 const IconBell = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
     <path d="M18 16H6l2-4V9a4 4 0 018 0v3l2 4Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
@@ -39,6 +46,7 @@ const IconDoc = () => (
 )
 
 const menuItems = [
+  { Icon: IconUsers,   label: '家族共有',            href: '/share' },
   { Icon: IconBell,    label: '通知設定',           href: '/notifications' },
   { Icon: IconHistory, label: '相談履歴',            href: '/chat' },
   { Icon: IconLock,    label: 'アカウント設定',       href: '/account' },

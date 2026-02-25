@@ -3,7 +3,11 @@ import Badge, { WarrantyStatus } from '@/components/ui/Badge'
 import { ProductImage } from '@/components/ui/ProductImage'
 import { formatDaysRemaining } from '@/lib/utils'
 import { DocumentUpload } from '@/components/ui/DocumentUpload'
+import { ConsumableSection } from '@/components/ui/ConsumableSection'
+import { ReminderSection } from '@/components/ui/ReminderSection'
+import { MemoSection } from '@/components/ui/MemoSection'
 
+// ── Product data ──────────────────────────────────────────────────────────────
 const products: Record<
   string,
   {
@@ -79,6 +83,25 @@ const products: Record<
   },
 }
 
+// ── Consumables per product ───────────────────────────────────────────────────
+const consumablesMap: Record<string, Array<{ id: string; name: string; intervalDays: number; intervalLabel: string }>> = {
+  '1': [
+    { id: 'filter', name: 'フィルター清掃', intervalDays: 14, intervalLabel: '約2週間ごと' },
+    { id: 'outdoor', name: '室外機フィルター清掃', intervalDays: 365, intervalLabel: '年1回' },
+  ],
+  '2': [
+    { id: 'lint', name: '糸くずフィルター清掃', intervalDays: 30, intervalLabel: '月1回' },
+    { id: 'drum', name: '洗濯槽クリーナー', intervalDays: 30, intervalLabel: '月1回' },
+  ],
+  '3': [
+    { id: 'battery', name: 'リモコン電池交換', intervalDays: 365, intervalLabel: '年1回目安' },
+  ],
+  '4': [
+    { id: 'deodorizer', name: '脱臭フィルター交換', intervalDays: 180, intervalLabel: '6ヶ月ごと' },
+    { id: 'ice_filter', name: '製氷用水フィルター交換', intervalDays: 365, intervalLabel: '年1回' },
+  ],
+}
+
 const statusBarColor: Record<WarrantyStatus, string> = {
   active: '#059669',
   expiring: '#D97706',
@@ -87,6 +110,8 @@ const statusBarColor: Record<WarrantyStatus, string> = {
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const product = products[params.id] ?? products['1']
+  const consumables = consumablesMap[params.id] ?? []
+
   const progressPct =
     product.status === 'expired'
       ? 100
@@ -96,6 +121,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
 
   return (
     <div style={{ background: '#FAFBFC', minHeight: '100%' }}>
+      {/* Header */}
       <div style={{ background: 'white', borderBottom: '1px solid #E8ECF0', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <Link href="/my-appliances" style={{ width: 32, height: 32, background: '#0F1419', borderRadius: '50%', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', flexShrink: 0 }}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 12L6 8L10 4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
@@ -104,14 +130,9 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       </div>
 
       <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+        {/* Product card */}
         <div style={{ background: 'white', border: '1px solid #E8ECF0', borderRadius: 16, padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, boxShadow: '0 1px 4px rgba(15,20,25,0.06)' }}>
-          <ProductImage
-            imageUrl={product.imageUrl}
-            name={product.name}
-            size={72}
-            iconSize={40}
-            borderRadius={16}
-          />
+          <ProductImage imageUrl={product.imageUrl} name={product.name} size={72} iconSize={40} borderRadius={16} />
           <div style={{ textAlign: 'center' }}>
             <p style={{ fontSize: 18, fontWeight: 700, color: '#0F1419', margin: 0 }}>{product.name}</p>
             <p style={{ fontSize: 13, color: '#98A2AE', margin: '4px 0' }}>{product.model} · {product.brand}</p>
@@ -131,6 +152,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           </div>
         </div>
 
+        {/* Product info */}
         <div style={{ background: 'white', border: '1px solid #E8ECF0', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,20,25,0.06)' }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid #E8ECF0' }}>
             <p style={{ fontSize: 12, fontWeight: 700, color: '#5B6570', margin: 0 }}>製品情報</p>
@@ -152,6 +174,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           ))}
         </div>
 
+        {/* Documents */}
         <div style={{ background: 'white', border: '1px solid #E8ECF0', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,20,25,0.06)' }}>
           <div style={{ padding: '12px 16px', borderBottom: '1px solid #E8ECF0' }}>
             <p style={{ fontSize: 12, fontWeight: 700, color: '#5B6570', margin: 0 }}>書類</p>
@@ -172,6 +195,16 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           </div>
         </div>
 
+        {/* Consumables */}
+        <ConsumableSection productId={params.id} consumables={consumables} />
+
+        {/* Reminder */}
+        <ReminderSection productId={params.id} warrantyEnd={product.warrantyEnd} status={product.status} />
+
+        {/* Memo */}
+        <MemoSection productId={params.id} />
+
+        {/* AI Chat button */}
         <Link href={chatHref} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#0F1419', color: 'white', borderRadius: 100, height: 50, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
             <path d="M15 1.5H3C2.175 1.5 1.5 2.175 1.5 3V16.5L4.5 13.5H15C15.825 13.5 16.5 12.825 16.5 12V3C16.5 2.175 15.825 1.5 15 1.5Z" fill="white" />

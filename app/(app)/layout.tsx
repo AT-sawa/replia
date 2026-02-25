@@ -1,4 +1,5 @@
 import TabBar from '@/components/ui/TabBar'
+import SideNav from '@/components/ui/SideNav'
 
 export default function AppLayout({
   children,
@@ -6,10 +7,18 @@ export default function AppLayout({
   children: React.ReactNode
 }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
-      <main style={{ flex: 1, overflowY: 'auto', background: '#FAFBFC' }}>
-        {children}
+    <div className="flex flex-col md:flex-row h-screen overflow-hidden">
+      {/* Desktop sidebar — hidden on mobile */}
+      <SideNav />
+
+      {/* Main content — pb-[83px] on mobile to clear fixed TabBar */}
+      <main className="flex-1 overflow-y-auto pb-[83px] md:pb-0" style={{ background: '#FAFBFC' }}>
+        <div style={{ height: '100%' }}>
+          {children}
+        </div>
       </main>
+
+      {/* Mobile tab bar — fixed at bottom, hidden on desktop */}
       <TabBar />
     </div>
   )

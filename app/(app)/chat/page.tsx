@@ -26,6 +26,57 @@ function ChatWithKey() {
   return <ChatContent key={chatKey} />
 }
 
+// ── URL → clickable link renderer ────────────────────────────────────────────
+function renderContent(text: string, isUser: boolean) {
+  const urlPattern = /https?:\/\/[^\s]+/g
+  const result: React.ReactNode[] = []
+  let lastIndex = 0
+  let match: RegExpExecArray | null
+
+  while ((match = urlPattern.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      result.push(<span key={lastIndex}>{text.slice(lastIndex, match.index)}</span>)
+    }
+    const url = match[0]
+    const isYoutube = url.includes('youtube.com')
+    result.push(
+      <a
+        key={match.index}
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 5,
+          margin: '4px 0 2px',
+          padding: '5px 10px',
+          borderRadius: 8,
+          fontSize: 12,
+          fontWeight: 600,
+          textDecoration: 'none',
+          background: isUser ? 'rgba(255,255,255,0.18)' : '#EFF4FF',
+          border: `1px solid ${isUser ? 'rgba(255,255,255,0.35)' : '#D6E4FF'}`,
+          color: isUser ? 'white' : '#2563EB',
+        }}
+      >
+        {isYoutube && (
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 001.46 6.42 29 29 0 001 12a29 29 0 00.46 5.58 2.78 2.78 0 001.95 1.96C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 001.95-1.96A29 29 0 0023 12a29 29 0 00-.46-5.58z" fill={isUser ? 'white' : '#2563EB'} />
+            <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill={isUser ? '#2563EB' : 'white'} />
+          </svg>
+        )}
+        {isYoutube ? 'YouTubeで動画を見る' : url}
+      </a>
+    )
+    lastIndex = match.index + url.length
+  }
+  if (lastIndex < text.length) {
+    result.push(<span key={lastIndex}>{text.slice(lastIndex)}</span>)
+  }
+  return result
+}
+
 // ── Typing indicator ─────────────────────────────────────────────────────────
 function TypingIndicator() {
   return (
@@ -182,7 +233,7 @@ function ChatContent() {
               maxWidth: msg.role === 'user' ? '78%' : '82%',
               whiteSpace: 'pre-wrap',
             }}>
-              {msg.content}
+              {renderContent(msg.content, msg.role === 'user')}
             </div>
             {msg.source && (
               <div style={{

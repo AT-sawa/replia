@@ -67,16 +67,19 @@ export default function TabBar() {
 
   return (
     <div
+      className="flex md:hidden"
       style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
         height: 83,
         background: 'white',
         borderTop: '1px solid #E8ECF0',
         paddingTop: 8,
         paddingBottom: 20,
-        flexShrink: 0,
-        display: 'flex',
         alignItems: 'flex-start',
-        width: '100%',
+        zIndex: 50,
       }}
     >
       {tabs.map((tab) => {

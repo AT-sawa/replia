@@ -40,6 +40,12 @@ body {
   min-height: 100vh;
 }
 
+@media (min-width: 768px) {
+  body {
+    display: block;
+  }
+}
+
 /* Welcome card decorative circles */
 .welcome-card {
   position: relative;
@@ -83,4 +89,87 @@ body {
 input:focus,
 textarea:focus {
   outline: none;
+}
+
+/* ── My Appliances: responsive grid ── */
+.appliance-list {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Image wrapper — flex pass-through on mobile */
+.appliance-card-img-wrap {
+  display: flex;
+  flex-shrink: 0;
+}
+
+@media (min-width: 768px) {
+  /* Responsive equal-size grid on desktop */
+  .appliance-list {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 14px;
+    padding: 16px;
+  }
+
+  /* Card: stack vertically, image flush to edges */
+  .appliance-card-inner {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 10px !important;
+    gap: 0 !important;
+    overflow: hidden;
+  }
+
+  /* Square image area fills full card width */
+  .appliance-card-img-wrap {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    background: #F4F6F8;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+
+  /* Override ProductImage's inline width/height */
+  .appliance-card-img-wrap img,
+  .appliance-card-img-wrap > div {
+    width: 62% !important;
+    height: 62% !important;
+    border-radius: 0 !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Text section */
+  .appliance-card-body {
+    flex: unset !important;
+    min-width: unset !important;
+    padding: 8px 0 4px !important;
+  }
+
+  /* Allow name to wrap on grid cards */
+  .appliance-card-name {
+    white-space: normal !important;
+    overflow: visible !important;
+    text-overflow: unset !important;
+    font-size: 13px !important;
+  }
+
+  /* Badge + days row */
+  .appliance-card-meta {
+    flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: wrap;
+    gap: 6px !important;
+    flex-shrink: unset !important;
+    margin-top: 4px;
+  }
+
+  /* Hide chevron on grid cards */
+  .appliance-card-chevron {
+    display: none !important;
+  }
 }
