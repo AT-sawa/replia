@@ -5,11 +5,9 @@ import { useRouter } from 'next/navigation'
 
 export default function EscalationPage() {
   const router = useRouter()
-  const [symptoms, setSymptoms] = useState('')
   const [submitted, setSubmitted] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async () => {
     setSubmitted(true)
     await new Promise((r) => setTimeout(r, 1000))
     router.push('/')
@@ -187,60 +185,25 @@ export default function EscalationPage() {
           </div>
         </div>
 
-        {/* Symptoms */}
-        <form onSubmit={handleSubmit}>
-          <div>
-            <label
-              style={{
-                fontSize: 12,
-                fontWeight: 600,
-                color: '#5B6570',
-                display: 'block',
-                marginBottom: 6,
-              }}
-            >
-              追記事項（任意）
-            </label>
-            <textarea
-              value={symptoms}
-              onChange={(e) => setSymptoms(e.target.value)}
-              placeholder="症状の詳細や気になる点をご記入ください..."
-              rows={4}
-              style={{
-                width: '100%',
-                border: '1.5px solid #E8ECF0',
-                borderRadius: 12,
-                padding: '12px 14px',
-                fontSize: 13,
-                color: '#0F1419',
-                background: 'white',
-                resize: 'none',
-                fontFamily: "'Zen Kaku Gothic New', sans-serif",
-                lineHeight: 1.7,
-              }}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={submitted}
-            style={{
-              background: '#DC2626',
-              color: 'white',
-              width: '100%',
-              height: 50,
-              borderRadius: 100,
-              border: 'none',
-              fontSize: 15,
-              fontWeight: 700,
-              cursor: submitted ? 'not-allowed' : 'pointer',
-              opacity: submitted ? 0.7 : 1,
-              marginTop: 14,
-            }}
-          >
-            {submitted ? '送信中...' : '修理依頼を送信する'}
-          </button>
-        </form>
+        {/* Back to Home */}
+        <button
+          onClick={handleSubmit}
+          disabled={submitted}
+          style={{
+            background: '#DC2626',
+            color: 'white',
+            width: '100%',
+            height: 50,
+            borderRadius: 100,
+            border: 'none',
+            fontSize: 15,
+            fontWeight: 700,
+            cursor: submitted ? 'not-allowed' : 'pointer',
+            opacity: submitted ? 0.7 : 1,
+          }}
+        >
+          {submitted ? '処理中...' : '完了してホームに戻る'}
+        </button>
       </div>
     </div>
   )

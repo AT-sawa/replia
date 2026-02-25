@@ -32,7 +32,7 @@ const products: Record<
     daysLeft: 284,
     totalDays: 365,
     store: 'ヨドバシカメラ 新宿店',
-    manualUrl: 'https://panasonic.net/cns/sav/products/aircon/cs_x402d2/',
+    manualUrl: 'https://www.google.com/search?q=Panasonic+CS-X402D2+取扱説明書+PDF',
     imageUrl: 'https://img1.kakaku.k-img.com/images/productimage/l/K0001387191.jpg',
   },
   '2': {
@@ -46,7 +46,7 @@ const products: Record<
     daysLeft: 28,
     totalDays: 365,
     store: 'ビックカメラ 渋谷店',
-    manualUrl: 'https://panasonic.net/cns/sav/products/washingmachines/na-vx900bl/',
+    manualUrl: 'https://www.google.com/search?q=Panasonic+NA-VX900BL+取扱説明書+PDF',
     imageUrl: 'https://img1.kakaku.k-img.com/images/productimage/l/J0000033345.jpg',
   },
   '3': {
@@ -60,7 +60,7 @@ const products: Record<
     daysLeft: 0,
     totalDays: 365,
     store: 'Amazon',
-    manualUrl: 'https://panasonic.net/cns/sav/products/televisions/th-65lx950/',
+    manualUrl: 'https://www.google.com/search?q=Panasonic+TH-65LX950+取扱説明書+PDF',
     imageUrl: 'https://img1.kakaku.k-img.com/images/productimage/l/K0001435839.jpg',
   },
   '4': {
@@ -74,7 +74,7 @@ const products: Record<
     daysLeft: 512,
     totalDays: 1825,
     store: 'ヨドバシカメラ 秋葉原店',
-    manualUrl: 'https://panasonic.net/cns/sav/products/refrigerators/nr-f605wpx/',
+    manualUrl: 'https://www.google.com/search?q=Panasonic+NR-F605WPX+取扱説明書+PDF',
     imageUrl: 'https://img1.kakaku.k-img.com/images/productimage/l/J0000029607.jpg',
   },
 }
@@ -166,7 +166,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
               <span style={{ fontSize: 13, color: '#0F1419', flex: 1 }}>取扱説明書</span>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3.5L8.5 7L5 10.5" stroke="#C5CAD0" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" /></svg>
             </a>
-            {['保証書', '領収書'].map(doc => (
+            {['保証書', 'デジタル保証書', '領収書'].map(doc => (
               <DocumentUpload key={doc} docName={doc} />
             ))}
           </div>
