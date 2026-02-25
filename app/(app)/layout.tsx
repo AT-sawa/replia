@@ -12,7 +12,7 @@ export default function AppLayout({
       <SideNav />
 
       {/* Main content — pb-[83px] on mobile to clear fixed TabBar */}
-      <main className="flex-1 overflow-y-auto pb-[83px] md:pb-0" style={{ background: '#FAFBFC', overflowX: 'hidden' }}>
+      <main className="flex-1 overflow-y-auto pb-[58px] md:pb-0" style={{ background: '#FAFBFC', overflowX: 'hidden' }}>
         <div style={{ height: '100%', width: '100%', boxSizing: 'border-box' }}>
           {children}
         </div>

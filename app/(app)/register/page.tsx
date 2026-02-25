@@ -111,6 +111,16 @@ export default function RegisterPage() {
     }
   }
 
+  // Photo upload
+  const photoInputRef = useRef<HTMLInputElement>(null)
+  const [photoName, setPhotoName] = useState('')
+
+  const handlePhotoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) setPhotoName(file.name)
+    e.target.value = ''
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setSubmitted(true)
@@ -263,16 +273,43 @@ export default function RegisterPage() {
         {/* Photo Upload */}
         <div>
           <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>領収書・保証書の写真</label>
-          <div style={{ border: '2px dashed #E8ECF0', borderRadius: 12, padding: '28px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer', marginBottom: 20 }}>
+          <input
+            ref={photoInputRef}
+            type="file"
+            accept="image/*,application/pdf"
+            style={{ display: 'none' }}
+            onChange={handlePhotoFile}
+          />
+          <div
+            onClick={() => photoInputRef.current?.click()}
+            style={{
+              border: `2px dashed ${photoName ? '#86EFAC' : '#E8ECF0'}`,
+              borderRadius: 12,
+              padding: '28px 20px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 8,
+              cursor: 'pointer',
+              marginBottom: 20,
+              background: photoName ? '#F0FDF4' : 'white',
+            }}
+          >
             <div style={{ width: 44, height: 44, background: '#F4F6F8', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                <path d="M3 17L7.5 11L10.5 15L13.5 11L19 17H3Z" stroke="#98A2AE" strokeWidth="1.5" strokeLinejoin="round" />
-                <circle cx="8" cy="7" r="2" stroke="#98A2AE" strokeWidth="1.5" />
-                <rect x="1" y="2" width="20" height="18" rx="3" stroke="#98A2AE" strokeWidth="1.5" />
+                <path d="M3 17L7.5 11L10.5 15L13.5 11L19 17H3Z" stroke={photoName ? '#16A34A' : '#98A2AE'} strokeWidth="1.5" strokeLinejoin="round" />
+                <circle cx="8" cy="7" r="2" stroke={photoName ? '#16A34A' : '#98A2AE'} strokeWidth="1.5" />
+                <rect x="1" y="2" width="20" height="18" rx="3" stroke={photoName ? '#16A34A' : '#98A2AE'} strokeWidth="1.5" />
               </svg>
             </div>
-            <p style={{ fontSize: 13, color: '#98A2AE', margin: 0, textAlign: 'center' }}>タップして写真をアップロード</p>
-            <p style={{ fontSize: 11, color: '#C5CAD0', margin: 0 }}>JPG, PNG, PDF 対応</p>
+            {photoName ? (
+              <p style={{ fontSize: 13, color: '#16A34A', fontWeight: 600, margin: 0, textAlign: 'center' }}>✓ {photoName}</p>
+            ) : (
+              <>
+                <p style={{ fontSize: 13, color: '#98A2AE', margin: 0, textAlign: 'center' }}>タップして写真をアップロード</p>
+                <p style={{ fontSize: 11, color: '#C5CAD0', margin: 0 }}>JPG, PNG, PDF 対応</p>
+              </>
+            )}
           </div>
         </div>
 
