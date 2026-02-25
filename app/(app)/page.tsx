@@ -120,7 +120,7 @@ export default function HomePage() {
             }}
           />
 
-          {/* QR Button */}
+          {/* 家電追加ボタン */}
           <button
             type="button"
             onClick={() => router.push('/register')}
@@ -138,13 +138,7 @@ export default function HomePage() {
             }}
           >
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <rect x="1" y="1" width="5.5" height="5.5" rx="1" stroke="white" strokeWidth="1.5" />
-              <rect x="9.5" y="1" width="5.5" height="5.5" rx="1" stroke="white" strokeWidth="1.5" />
-              <rect x="1" y="9.5" width="5.5" height="5.5" rx="1" stroke="white" strokeWidth="1.5" />
-              <rect x="2.5" y="2.5" width="2.5" height="2.5" fill="white" />
-              <rect x="11" y="2.5" width="2.5" height="2.5" fill="white" />
-              <rect x="2.5" y="11" width="2.5" height="2.5" fill="white" />
-              <path d="M9.5 9.5H11V11H9.5V9.5ZM12.5 9.5H14V11H12.5V9.5ZM11 11H12.5V12.5H11V11ZM9.5 12.5H11V14H9.5V12.5ZM12.5 12.5H14V14H12.5V12.5Z" fill="white" />
+              <path d="M8 3V13M3 8H13" stroke="white" strokeWidth="2" strokeLinecap="round" />
             </svg>
           </button>
         </div>

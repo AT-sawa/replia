@@ -5,12 +5,12 @@ import { usePathname } from 'next/navigation'
 
 const tabs = [
   {
-    href: '/chat',
-    label: 'チャット',
+    href: '/',
+    label: 'ホーム',
     icon: (active: boolean) => (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <path
-          d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"
+          d="M3 12L12 3L21 12V21H15V15H9V21H3V12Z"
           fill={active ? '#0F1419' : 'none'}
           stroke={active ? '#0F1419' : '#98A2AE'}
           strokeWidth="2"
@@ -81,8 +81,8 @@ export default function TabBar() {
     >
       {tabs.map((tab) => {
         const isActive =
-          tab.href === '/chat'
-            ? pathname === '/chat' || pathname === '/'
+          tab.href === '/'
+            ? pathname === '/' || pathname === '/chat'
             : pathname.startsWith(tab.href)
 
         return (
