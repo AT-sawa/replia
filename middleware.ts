@@ -37,9 +37,10 @@ export async function middleware(request: NextRequest) {
     const pathname = request.nextUrl.pathname
     const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/signup')
     const isApiRoute  = pathname.startsWith('/api')
+    const isCallback  = pathname.startsWith('/auth/callback')
 
     // 未ログイン → ログインページへリダイレクト
-    if (!user && !isAuthRoute && !isApiRoute) {
+    if (!user && !isAuthRoute && !isApiRoute && !isCallback) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
 
