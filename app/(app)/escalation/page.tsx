@@ -101,9 +101,11 @@ export default function EscalationPage() {
               padding: '12px 14px',
             }}
           >
-            <p style={{ fontSize: 12, color: '#5B6570', margin: 0, lineHeight: 1.7 }}>
-              ユーザーはエアコン（CS-X402D2）が全く冷えないと報告。フィルター清掃・室外機確認・設定温度確認を試みたが改善なし。エラーコード H11 が表示されており、冷媒ガス漏れの可能性が高い。
-            </p>
+            <ul style={{ fontSize: 12, color: '#5B6570', margin: 0, paddingLeft: 16, lineHeight: 1.9 }}>
+              <li>エアコン（CS-X402D2）が全く冷えないと報告</li>
+              <li>フィルター清掃・室外機確認・設定温度確認を試みたが改善なし</li>
+              <li>エラーコード H11 が表示されており、冷媒ガス漏れの可能性が高い</li>
+            </ul>
           </div>
         </div>
 
@@ -156,7 +158,7 @@ export default function EscalationPage() {
                 </div>
               </div>
             </div>
-            <div style={{ padding: '12px 16px' }}>
+            <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               <a
                 href="tel:0120-878-365"
                 style={{
@@ -181,6 +183,49 @@ export default function EscalationPage() {
                 </svg>
                 0120-878-365
               </a>
+
+              {/* IVR Menu */}
+              <div style={{ background: '#F4F6F8', borderRadius: 10, padding: '10px 12px' }}>
+                <p style={{ fontSize: 11, color: '#98A2AE', margin: '0 0 8px', fontWeight: 600, letterSpacing: '0.03em' }}>
+                  📞 自動音声ガイド
+                </p>
+                {[
+                  { key: '1', label: 'エアコン・空気清浄機' },
+                  { key: '2', label: '冷蔵庫・洗濯機・食洗機' },
+                  { key: '3', label: 'テレビ・レコーダー・カメラ' },
+                  { key: '4', label: 'その他の製品' },
+                ].map((item, i, arr) => (
+                  <div
+                    key={item.key}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      paddingTop: 6,
+                      paddingBottom: 6,
+                      borderBottom: i < arr.length - 1 ? '1px solid #E8ECF0' : 'none',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 24,
+                        height: 24,
+                        background: '#0F1419',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <span style={{ fontSize: 12, color: 'white', fontWeight: 700, fontFamily: "'DM Sans', sans-serif" }}>
+                        {item.key}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: 12, color: '#5B6570' }}>{item.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>

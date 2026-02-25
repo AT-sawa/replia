@@ -103,7 +103,7 @@ export default function MyPage() {
   }
 
   return (
-    <div style={{ background: '#FAFBFC', minHeight: '100%' }}>
+    <div style={{ background: '#FAFBFC', minHeight: '100%', width: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
       {/* Header */}
       <div style={{ background: 'white', borderBottom: '1px solid #E8ECF0', padding: '14px 16px' }}>
         <p style={{ fontSize: 18, fontWeight: 700, color: '#0F1419', margin: 0 }}>

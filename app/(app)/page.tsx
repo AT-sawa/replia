@@ -95,7 +95,7 @@ export default function HomePage() {
             height: 50,
             display: 'flex',
             alignItems: 'center',
-            padding: '0 8px 0 16px',
+            padding: '0 10px 0 16px',
             gap: 10,
           }}
         >

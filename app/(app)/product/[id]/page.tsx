@@ -120,7 +120,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const chatHref = `/chat?productId=${params.id}&product=${encodeURIComponent(product.name)}&brand=${encodeURIComponent(product.brand)}&model=${encodeURIComponent(product.model)}`
 
   return (
-    <div style={{ background: '#FAFBFC', minHeight: '100%' }}>
+    <div style={{ background: '#FAFBFC', minHeight: '100%', width: '100%', boxSizing: 'border-box', overflowX: 'hidden' }}>
       {/* Header */}
       <div style={{ background: 'white', borderBottom: '1px solid #E8ECF0', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <Link href="/my-appliances" style={{ width: 32, height: 32, background: '#0F1419', borderRadius: '50%', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', flexShrink: 0 }}>
