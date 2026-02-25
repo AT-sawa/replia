@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Badge, { WarrantyStatus } from '@/components/ui/Badge'
-import { ApplianceIcon } from '@/components/ui/ApplianceIcon'
+import { ProductImage } from '@/components/ui/ProductImage'
+import { formatDaysRemaining } from '@/lib/utils'
 
 const products: Record<
   string,
@@ -16,6 +17,7 @@ const products: Record<
     totalDays: number
     store: string
     manualUrl: string
+    imageUrl: string
   }
 > = {
   '1': {
@@ -30,6 +32,7 @@ const products: Record<
     totalDays: 365,
     store: 'ヨドバシカメラ 新宿店',
     manualUrl: 'https://www.google.com/search?q=Panasonic+CS-X402D2+取扱説明書',
+    imageUrl: 'https://img1.kakaku.k-img.com/images/productimage/l/K0001387191.jpg',
   },
   '2': {
     name: '全自動洗濯機',
@@ -43,6 +46,7 @@ const products: Record<
     totalDays: 365,
     store: 'ビックカメラ 渋谷店',
     manualUrl: 'https://www.google.com/search?q=Panasonic+NA-VX900BL+取扱説明書',
+    imageUrl: 'https://img1.kakaku.k-img.com/images/productimage/l/J0000033345.jpg',
   },
   '3': {
     name: '液晶テレビ',
@@ -56,6 +60,7 @@ const products: Record<
     totalDays: 365,
     store: 'Amazon',
     manualUrl: 'https://www.google.com/search?q=Panasonic+TH-65LX950+取扱説明書',
+    imageUrl: 'https://img1.kakaku.k-img.com/images/productimage/l/K0001435839.jpg',
   },
   '4': {
     name: '冷蔵庫',
@@ -69,6 +74,7 @@ const products: Record<
     totalDays: 1825,
     store: 'ヨドバシカメラ 秋葉原店',
     manualUrl: 'https://www.google.com/search?q=Panasonic+NR-F605WPX+取扱説明書',
+    imageUrl: 'https://img1.kakaku.k-img.com/images/productimage/l/J0000029607.jpg',
   },
 }
 
@@ -98,9 +104,13 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
 
       <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ background: 'white', border: '1px solid #E8ECF0', borderRadius: 16, padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, boxShadow: '0 1px 4px rgba(15,20,25,0.06)' }}>
-          <div style={{ width: 72, height: 72, background: '#F4F6F8', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0F1419' }}>
-            <ApplianceIcon type={product.name} size={40} />
-          </div>
+          <ProductImage
+            imageUrl={product.imageUrl}
+            name={product.name}
+            size={72}
+            iconSize={40}
+            borderRadius={16}
+          />
           <div style={{ textAlign: 'center' }}>
             <p style={{ fontSize: 18, fontWeight: 700, color: '#0F1419', margin: 0 }}>{product.name}</p>
             <p style={{ fontSize: 13, color: '#98A2AE', margin: '4px 0' }}>{product.model} · {product.brand}</p>
@@ -110,7 +120,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
               <span style={{ fontSize: 11, color: '#98A2AE' }}>保証期間</span>
               <span style={{ fontSize: 11, fontWeight: 700, color: statusBarColor[product.status], fontFamily: "'DM Sans', sans-serif" }}>
-                {product.status === 'expired' ? '期限切れ' : `残 ${product.daysLeft}日`}
+                {product.status === 'expired' ? '期限切れ' : `残 ${formatDaysRemaining(product.daysLeft)}`}
               </span>
             </div>
             <div style={{ height: 8, background: '#F4F6F8', borderRadius: 4, overflow: 'hidden' }}>

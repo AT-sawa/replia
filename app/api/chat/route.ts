@@ -45,7 +45,8 @@ ${productContext}
 - エラーコードや症状に応じた具体的なアドバイスをする
 - 解決しない場合は「🔧 修理依頼」ボタンを使うよう案内する
 - 500文字以内で回答する
-- 同じ答えを繰り返さず、会話の流れに合わせて回答を変える`
+- 同じ答えを繰り返さず、会話の流れに合わせて回答を変える
+- **や##などのMarkdown記号は絶対に使わない。プレーンテキストのみ。`
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',

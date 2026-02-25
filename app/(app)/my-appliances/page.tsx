@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Badge, { WarrantyStatus } from '@/components/ui/Badge'
-import { ApplianceIcon } from '@/components/ui/ApplianceIcon'
+import { ProductImage } from '@/components/ui/ProductImage'
+import { formatDaysRemaining } from '@/lib/utils'
 
 const appliances = [
   {
@@ -10,6 +11,7 @@ const appliances = [
     brand: 'Panasonic',
     status: 'active' as WarrantyStatus,
     daysLeft: 284,
+    imageUrl: 'https://img1.kakaku.k-img.com/images/productimage/l/K0001387191.jpg',
   },
   {
     id: '2',
@@ -18,6 +20,7 @@ const appliances = [
     brand: 'Panasonic',
     status: 'expiring' as WarrantyStatus,
     daysLeft: 28,
+    imageUrl: 'https://img1.kakaku.k-img.com/images/productimage/l/J0000033345.jpg',
   },
   {
     id: '3',
@@ -26,6 +29,7 @@ const appliances = [
     brand: 'Panasonic',
     status: 'expired' as WarrantyStatus,
     daysLeft: 0,
+    imageUrl: 'https://img1.kakaku.k-img.com/images/productimage/l/K0001435839.jpg',
   },
   {
     id: '4',
@@ -34,6 +38,7 @@ const appliances = [
     brand: 'Panasonic',
     status: 'active' as WarrantyStatus,
     daysLeft: 512,
+    imageUrl: 'https://img1.kakaku.k-img.com/images/productimage/l/J0000029607.jpg',
   },
 ]
 
@@ -76,22 +81,14 @@ export default function MyAppliancesPage() {
                 boxShadow: '0 1px 4px rgba(15,20,25,0.06)',
               }}
             >
-              {/* Icon */}
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  background: '#F4F6F8',
-                  borderRadius: 8,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#0F1419',
-                  flexShrink: 0,
-                }}
-              >
-                <ApplianceIcon type={item.name} size={24} />
-              </div>
+              {/* Product Photo */}
+              <ProductImage
+                imageUrl={item.imageUrl}
+                name={item.name}
+                size={44}
+                iconSize={24}
+                borderRadius={8}
+              />
 
               {/* Info */}
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -133,7 +130,7 @@ export default function MyAppliancesPage() {
                       fontFamily: "'DM Sans', sans-serif",
                     }}
                   >
-                    残{item.daysLeft}日
+                    残{formatDaysRemaining(item.daysLeft)}
                   </p>
                 )}
               </div>
