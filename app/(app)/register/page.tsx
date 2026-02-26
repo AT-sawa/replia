@@ -23,7 +23,7 @@ export default function RegisterPage() {
   const [productImageUrl, setProductImageUrl] = useState<string | null>(null)
   const [imageLoading, setImageLoading] = useState(false)
 
-  // Auto-fetch product image when model number changes (debounced)
+  // Auto-fetch product image + brand when model number changes (debounced)
   useEffect(() => {
     const trimmed = modelNumber.trim()
     if (trimmed.length < 3) {
@@ -36,6 +36,10 @@ export default function RegisterPage() {
         const res = await fetch(`/api/product-image?model=${encodeURIComponent(trimmed)}`)
         const data = await res.json()
         setProductImageUrl(data.imageUrl ?? null)
+        // Auto-fill brand only if the user hasn't typed one themselves
+        if (data.brand && !brand.trim()) {
+          setBrand(data.brand)
+        }
       } catch {
         setProductImageUrl(null)
       } finally {
@@ -43,6 +47,7 @@ export default function RegisterPage() {
       }
     }, 900)
     return () => clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelNumber])
 
   // Receipt scanner

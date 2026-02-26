@@ -1,14 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Japanese → display brand name map
+const BRAND_MAP: Record<string, string> = {
+  'パナソニック': 'Panasonic',
+  'シャープ':     'SHARP',
+  '東芝':         'TOSHIBA',
+  '日立':         'HITACHI',
+  '三菱電機':     '三菱電機',
+  '三菱重工':     '三菱重工',
+  'ソニー':       'SONY',
+  'ダイキン':     'DAIKIN',
+  '富士通':       '富士通ゼネラル',
+  'コロナ':       'CORONA',
+  'アイリスオーヤマ': 'アイリスオーヤマ',
+  'ハイアール':   'Haier',
+  'ヤマハ':       'YAMAHA',
+  'バルミューダ': 'BALMUDA',
+  'デロンギ':     'De\'Longhi',
+}
+
+// Simple prefix → brand fallback for common Japanese appliance model numbers
+function guessFromModelPrefix(model: string): string | null {
+  const m = model.toUpperCase()
+  if (/^NA-|^NR-|^CS-X|^HH-/.test(m))             return 'Panasonic'
+  if (/^SJ-|^SH-F|^AY-|^LC-|^AH-/.test(m))         return 'SHARP'
+  if (/^AW-|^GR-|^RAS-A|^VC-|^TW-/.test(m))        return 'TOSHIBA'
+  if (/^BD-|^BW-|^R-S|^RAS-X|^RAS-Y/.test(m))      return 'HITACHI'
+  if (/^MSZ-|^MJ-|^MR-Z|^ML-/.test(m))             return '三菱電機'
+  if (/^KJ-|^KD-|^WF-S|^VH-/.test(m))              return 'SONY'
+  if (/^S\d{2}|^AN-/.test(m))                       return 'DAIKIN'
+  if (/^AS-|^AH-X/.test(m))                         return '富士通ゼネラル'
+  if (/^RC-|^NW-|^NH-/.test(m))                     return 'TOSHIBA'
+  return null
+}
+
 // GET /api/product-image?model=NA-VX900BL
-// Searches Kakaku.com for a product image by model number.
-// Returns { imageUrl: string | null }
+// Returns { imageUrl: string | null, brand: string | null }
 export async function GET(req: NextRequest) {
   const model = req.nextUrl.searchParams.get('model')?.trim()
-  if (!model || model.length < 3) return NextResponse.json({ imageUrl: null })
+  if (!model || model.length < 3) return NextResponse.json({ imageUrl: null, brand: null })
+
+  // Start with prefix-based brand guess (instant, no network)
+  let brand: string | null = guessFromModelPrefix(model)
+  let imageUrl: string | null = null
 
   try {
-    // First try: search on Kakaku.com
     const kakakuUrl = `https://kakaku.com/search_results/?query=${encodeURIComponent(model)}&category=0020&act=Input`
     const res = await fetch(kakakuUrl, {
       headers: {
@@ -23,20 +59,35 @@ export async function GET(req: NextRequest) {
     if (res.ok) {
       const html = await res.text()
 
-      // Kakaku CDN image pattern (e.g. img1.kakaku.k-img.com/images/productimage/l/K0001234567.jpg)
-      const match = html.match(
+      // Extract product image URL from Kakaku CDN
+      const imgMatch = html.match(
         /img1\.kakaku\.k-img\.com\/images\/productimage\/l\/[A-Z0-9]+\.jpg/i
       )
-      if (match) {
-        return NextResponse.json({ imageUrl: `https://${match[0]}` })
+      if (imgMatch) imageUrl = `https://${imgMatch[0]}`
+
+      // Extract manufacturer from page title or first product title
+      // Kakaku product titles often start with the maker name
+      // e.g. <title>パナソニック NA-VX900BL-W ...</title>
+      // or in og:title / class="itmName" etc.
+      const titleMatch = html.match(/<title[^>]*>([^<]{3,80})<\/title>/i)
+      if (titleMatch) {
+        const title = titleMatch[1]
+        for (const [ja, en] of Object.entries(BRAND_MAP)) {
+          if (title.includes(ja)) { brand = en; break }
+        }
+      }
+
+      // Fallback: look in first 20KB for maker name in product listing
+      if (!brand) {
+        const snippet = html.slice(0, 20000)
+        for (const [ja, en] of Object.entries(BRAND_MAP)) {
+          if (snippet.includes(ja)) { brand = en; break }
+        }
       }
     }
-
-    // Second try: check our own products table for an existing image_url
-    // (No DB call here — the caller already checks DB before calling this API)
-
-    return NextResponse.json({ imageUrl: null })
   } catch {
-    return NextResponse.json({ imageUrl: null })
+    // Network error — prefix-based brand still returned below
   }
+
+  return NextResponse.json({ imageUrl, brand })
 }
