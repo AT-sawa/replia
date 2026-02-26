@@ -25,6 +25,7 @@ function rowToAppliance(row: any) {
     receipt_photo_url: row.receipt_photo_url        ?? null,
     warranty_photo_url:row.warranty_photo_url       ?? null,
     manual_url:        row.manual_url               ?? null,
+    notes:             row.notes                   ?? null,
   }
 }
 
@@ -37,6 +38,7 @@ const PRODUCT_SELECT = `
   receipt_photo_url,
   warranty_photo_url,
   manual_url,
+  notes,
   created_at,
   products (
     id,
@@ -87,7 +89,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const body = await req.json()
   const { appliance_type, brand, model, purchase_date, warranty_months, store_name, image_url,
-          receipt_photo_url, warranty_photo_url, manual_url } = body
+          receipt_photo_url, warranty_photo_url, manual_url, notes } = body
 
   // Update products master table
   if (current.product_id) {
@@ -119,6 +121,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (receipt_photo_url  !== undefined) userProductUpdates.receipt_photo_url  = receipt_photo_url
   if (warranty_photo_url !== undefined) userProductUpdates.warranty_photo_url = warranty_photo_url
   if (manual_url         !== undefined) userProductUpdates.manual_url         = manual_url
+  if (notes              !== undefined) userProductUpdates.notes              = notes
 
   if ((purchase_date !== undefined || warranty_months !== undefined) && resolvedPurchaseDate) {
     const end = new Date(resolvedPurchaseDate)

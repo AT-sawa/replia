@@ -91,6 +91,17 @@ textarea:focus {
   outline: none;
 }
 
+/* ── Skeleton loading animation ── */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+.skeleton {
+  background: #E8ECF0;
+  animation: skeleton-pulse 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
 /* ── My Appliances: responsive grid ── */
 .appliance-list {
   padding: 12px 16px;
