@@ -13,15 +13,18 @@ function rowToAppliance(row: any) {
       : (product?.default_warranty_months ?? 12)
 
   return {
-    id:              row.id,
-    appliance_type:  product?.product_name        ?? 'その他',
-    brand:           product?.manufacturer_name   ?? '',
-    model:           product?.model_number        ?? '',
-    purchase_date:   row.purchase_date            ?? null,
-    warranty_months: warrantyMonths,
-    store_name:      row.purchase_store           ?? '',
-    image_url:       product?.image_url           ?? null,
-    created_at:      row.created_at,
+    id:                row.id,
+    appliance_type:    product?.product_name        ?? 'その他',
+    brand:             product?.manufacturer_name   ?? '',
+    model:             product?.model_number        ?? '',
+    purchase_date:     row.purchase_date            ?? null,
+    warranty_months:   warrantyMonths,
+    store_name:        row.purchase_store           ?? '',
+    image_url:         product?.image_url           ?? null,
+    created_at:        row.created_at,
+    receipt_photo_url: row.receipt_photo_url        ?? null,
+    warranty_photo_url:row.warranty_photo_url       ?? null,
+    manual_url:        row.manual_url               ?? null,
   }
 }
 
@@ -31,6 +34,9 @@ const PRODUCT_SELECT = `
   purchase_store,
   warranty_start,
   warranty_end,
+  receipt_photo_url,
+  warranty_photo_url,
+  manual_url,
   created_at,
   products (
     id,
@@ -80,7 +86,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (ce || !current) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const body = await req.json()
-  const { appliance_type, brand, model, purchase_date, warranty_months, store_name, image_url } = body
+  const { appliance_type, brand, model, purchase_date, warranty_months, store_name, image_url,
+          receipt_photo_url, warranty_photo_url, manual_url } = body
 
   // Update products master table
   if (current.product_id) {
@@ -108,7 +115,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     userProductUpdates.purchase_date  = purchase_date || null
     userProductUpdates.warranty_start = purchase_date || null
   }
-  if (store_name !== undefined) userProductUpdates.purchase_store = store_name
+  if (store_name          !== undefined) userProductUpdates.purchase_store     = store_name
+  if (receipt_photo_url  !== undefined) userProductUpdates.receipt_photo_url  = receipt_photo_url
+  if (warranty_photo_url !== undefined) userProductUpdates.warranty_photo_url = warranty_photo_url
+  if (manual_url         !== undefined) userProductUpdates.manual_url         = manual_url
 
   if ((purchase_date !== undefined || warranty_months !== undefined) && resolvedPurchaseDate) {
     const end = new Date(resolvedPurchaseDate)
