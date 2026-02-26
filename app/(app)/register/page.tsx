@@ -24,6 +24,7 @@ export default function RegisterPage() {
   // Product image from model number
   const [productImageUrl, setProductImageUrl] = useState<string | null>(null)
   const [imageLoading, setImageLoading] = useState(false)
+  const [brandAutoFilled, setBrandAutoFilled] = useState(false)
 
   // Auto-fetch product image + brand when model number changes (debounced)
   useEffect(() => {
@@ -38,9 +39,11 @@ export default function RegisterPage() {
         const res = await fetch(`/api/product-image?model=${encodeURIComponent(trimmed)}`)
         const data = await res.json()
         setProductImageUrl(data.imageUrl ?? null)
-        // Auto-fill brand only if the user hasn't typed one themselves
-        if (data.brand && !brand.trim()) {
+        // Auto-fill brand: always overwrite if it was previously auto-filled,
+        // or if the field is empty
+        if (data.brand && (!brand.trim() || brandAutoFilled)) {
           setBrand(data.brand)
+          setBrandAutoFilled(true)
         }
       } catch {
         setProductImageUrl(null)
@@ -349,11 +352,19 @@ export default function RegisterPage() {
 
           {/* Brand */}
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>ブランド・メーカー</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+              <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570' }}>ブランド・メーカー</label>
+              {brandAutoFilled && (
+                <span style={{ fontSize: 10, fontWeight: 600, color: '#16A34A', background: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: 100, padding: '1px 8px' }}>
+                  ✓ 自動入力
+                </span>
+              )}
+            </div>
             <input
-              type="text" value={brand} onChange={(e) => setBrand(e.target.value)}
+              type="text" value={brand}
+              onChange={(e) => { setBrand(e.target.value); setBrandAutoFilled(false) }}
               placeholder="例：Panasonic, SHARP, HITACHI"
-              style={{ width: '100%', height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 14px', fontSize: 14, color: '#0F1419', background: 'white', fontFamily: "'Zen Kaku Gothic New', sans-serif", boxSizing: 'border-box' }}
+              style={{ width: '100%', height: 46, border: `1.5px solid ${brandAutoFilled ? '#86EFAC' : '#E8ECF0'}`, borderRadius: 10, padding: '0 14px', fontSize: 14, color: '#0F1419', background: brandAutoFilled ? '#F0FDF4' : 'white', fontFamily: "'Zen Kaku Gothic New', sans-serif", boxSizing: 'border-box', transition: 'all 0.2s' }}
             />
           </div>
 

@@ -22,15 +22,30 @@ const BRAND_MAP: Record<string, string> = {
 // Simple prefix → brand fallback for common Japanese appliance model numbers
 function guessFromModelPrefix(model: string): string | null {
   const m = model.toUpperCase()
-  if (/^NA-|^NR-|^CS-X|^HH-/.test(m))             return 'Panasonic'
-  if (/^SJ-|^SH-F|^AY-|^LC-|^AH-/.test(m))         return 'SHARP'
-  if (/^AW-|^GR-|^RAS-A|^VC-|^TW-/.test(m))        return 'TOSHIBA'
-  if (/^BD-|^BW-|^R-S|^RAS-X|^RAS-Y/.test(m))      return 'HITACHI'
-  if (/^MSZ-|^MJ-|^MR-Z|^ML-/.test(m))             return '三菱電機'
-  if (/^KJ-|^KD-|^WF-S|^VH-/.test(m))              return 'SONY'
-  if (/^S\d{2}|^AN-/.test(m))                       return 'DAIKIN'
-  if (/^AS-|^AH-X/.test(m))                         return '富士通ゼネラル'
-  if (/^RC-|^NW-|^NH-/.test(m))                     return 'TOSHIBA'
+  // Panasonic
+  if (/^NA-|^NR-|^CS-|^CF-|^HH-|^SC-|^EH-|^EW-|^F-\d|^MC-|^SR-/.test(m)) return 'Panasonic'
+  // SHARP（ES-は洗濯機、SJ-は冷蔵庫、AY-はエアコン等）
+  if (/^ES-|^SJ-|^SH-|^AY-|^LC-|^AH-|^FP-|^KC-|^RE-|^RX-|^EC-/.test(m))  return 'SHARP'
+  // TOSHIBA
+  if (/^AW-|^GR-|^VC-|^TW-|^RC-|^NW-|^NH-|^RAS-A|^ER-/.test(m))           return 'TOSHIBA'
+  // HITACHI
+  if (/^BD-|^BW-|^R-S|^R-X|^R-W|^R-HW|^RAS-X|^RAS-Y|^RAS-G|^CV-|^PV-/.test(m)) return 'HITACHI'
+  // 三菱電機
+  if (/^MSZ-|^MXZ-|^MJ-|^MR-|^ML-|^MFZ-/.test(m))                          return '三菱電機'
+  // SONY
+  if (/^KJ-|^KD-|^HT-|^SRS-|^MDR-|^WF-/.test(m))                           return 'SONY'
+  // DAIKIN
+  if (/^AN-|^ATC-|^ATZ-|^S\d{2}[A-Z]|^C\d{2}[A-Z]/.test(m))               return 'DAIKIN'
+  // 富士通ゼネラル
+  if (/^AS-|^AH-X|^AG-|^AB-/.test(m))                                       return '富士通ゼネラル'
+  // AQUA
+  if (/^AQW-|^AQR-/.test(m))                                                 return 'AQUA'
+  // Haier
+  if (/^JW-|^JR-/.test(m))                                                   return 'Haier'
+  // アイリスオーヤマ
+  if (/^IAW-|^KAW-|^PCF-|^IHF-/.test(m))                                    return 'アイリスオーヤマ'
+  // YAMAHA
+  if (/^YSP-|^AX-[A-Z]|^TSR-|^NS-[A-Z]/.test(m))                           return 'YAMAHA'
   return null
 }
 
