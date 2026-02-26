@@ -4,13 +4,60 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { ApplianceIcon } from '@/components/ui/ApplianceIcon'
 
-const APPLIANCE_TYPES = [
-  'エアコン', '洗濯機', '冷蔵庫', 'テレビ', '電子レンジ',
-  '食洗機', '掃除機', '炊飯器', 'ドライヤー', 'その他',
-]
+const GENRE_CATEGORIES: Record<string, string[]> = {
+  '生活家電': [
+    'エアコン', '洗濯機', '洗濯乾燥機', '乾燥機', '冷蔵庫',
+    '掃除機', 'ロボット掃除機', '空気清浄機', '加湿器', '除湿機', '扇風機',
+  ],
+  'キッチン家電': [
+    '電子レンジ', 'オーブントースター', '炊飯器', '食洗機',
+    '電気ケトル', 'コーヒーメーカー', 'ミキサー・ブレンダー',
+    'ホットプレート', 'IHクッキングヒーター', '電気圧力鍋',
+  ],
+  '美容・健康家電': [
+    'ドライヤー', 'ヘアアイロン', '電動歯ブラシ', '電気シェーバー',
+    '体重計・体組成計', 'マッサージ機', '血圧計', '体温計',
+  ],
+  'AV機器・PC・スマホ': [
+    'テレビ', 'PC・パソコン', 'スマートフォン', 'タブレット',
+    'スピーカー', 'ヘッドホン・イヤホン', '録画機・レコーダー', 'プロジェクター',
+  ],
+  'カメラ': [
+    'デジタルカメラ', '一眼レフカメラ', 'ミラーレスカメラ',
+    'ビデオカメラ', 'アクションカメラ', 'ドローン',
+  ],
+  'ゲーム・ホビー・楽器': [
+    'ゲーム機', '電子ピアノ・キーボード', 'ヘッドセット', 'DJ機器',
+  ],
+  '住宅設備・家具': [
+    '給湯器', 'エコキュート', '太陽光パネル',
+    'インターホン', '照明・シーリングライト', '電動シャッター',
+  ],
+  'カー用品・自転車': [
+    'カーナビ', 'ドライブレコーダー', '電動自転車・E-Bike',
+    'ETC車載器', 'レーダー探知機',
+  ],
+  '時計・スポーツ': [
+    'スマートウォッチ', 'フィットネス機器', 'ランニングマシン',
+  ],
+  'DIY・工具': [
+    '電動ドリル', '電動のこぎり', 'コンプレッサー', '電動サンダー',
+  ],
+  'アウトドア': [
+    'ポータブル電源', 'ソーラーパネル', 'ポータブル冷蔵庫',
+  ],
+  'ベビー・ペット': [
+    'ベビーモニター', 'ペット自動給餌器', 'ペット用空気清浄機',
+  ],
+  '生活雑貨': [
+    '電気毛布', '電動カーテン', '家庭用シュレッダー',
+  ],
+  'その他': ['その他'],
+}
 
 export default function RegisterPage() {
   const router = useRouter()
+  const [selectedGenre, setSelectedGenre] = useState('')
   const [applianceType, setApplianceType] = useState('')
   const [brand, setBrand] = useState('')
   const [modelNumber, setModelNumber] = useState('')
@@ -308,25 +355,45 @@ export default function RegisterPage() {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 16 }}>
 
-          {/* Appliance Type */}
+          {/* Appliance Type — 2-step: genre → sub-category */}
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>製品の種類</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {APPLIANCE_TYPES.map(t => (
+            {/* Step 1: Genre row (horizontally scrollable) */}
+            <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, WebkitOverflowScrolling: 'touch' as const }}>
+              {Object.keys(GENRE_CATEGORIES).map(genre => (
                 <button
-                  key={t} type="button"
-                  onClick={() => setApplianceType(t)}
+                  key={genre} type="button"
+                  onClick={() => { setSelectedGenre(genre); setApplianceType('') }}
                   style={{
-                    height: 32, padding: '0 12px', borderRadius: 100,
-                    border: applianceType === t ? 'none' : '1px solid #E8ECF0',
-                    background: applianceType === t ? '#0F1419' : 'white',
-                    color: applianceType === t ? 'white' : '#5B6570',
-                    fontSize: 12, fontWeight: applianceType === t ? 600 : 400,
+                    flexShrink: 0, height: 32, padding: '0 12px', borderRadius: 100,
+                    border: selectedGenre === genre ? 'none' : '1px solid #E8ECF0',
+                    background: selectedGenre === genre ? '#0F1419' : 'white',
+                    color: selectedGenre === genre ? 'white' : '#5B6570',
+                    fontSize: 12, fontWeight: selectedGenre === genre ? 600 : 400,
                     cursor: 'pointer',
                   }}
-                >{t}</button>
+                >{genre}</button>
               ))}
             </div>
+            {/* Step 2: Sub-category pills */}
+            {selectedGenre && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                {GENRE_CATEGORIES[selectedGenre].map(sub => (
+                  <button
+                    key={sub} type="button"
+                    onClick={() => setApplianceType(sub)}
+                    style={{
+                      height: 32, padding: '0 12px', borderRadius: 100,
+                      border: applianceType === sub ? 'none' : '1px solid #E8ECF0',
+                      background: applianceType === sub ? '#374151' : '#F9FAFB',
+                      color: applianceType === sub ? 'white' : '#374151',
+                      fontSize: 12, fontWeight: applianceType === sub ? 600 : 400,
+                      cursor: 'pointer',
+                    }}
+                  >{sub}</button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Model Number + Barcode Scan */}

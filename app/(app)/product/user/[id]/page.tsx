@@ -19,6 +19,15 @@ interface Appliance {
   created_at: string
 }
 
+interface HistoryEntry {
+  id: string
+  symptom: string
+  tried_solutions: string | null
+  status: string
+  warranty_status: string | null
+  created_at: string
+}
+
 function calcStatus(daysLeft: number): WarrantyStatus {
   if (daysLeft <= 0) return 'expired'
   if (daysLeft <= 60) return 'expiring'
@@ -39,6 +48,14 @@ export default function UserProductDetailPage({ params }: { params: { id: string
   const [deleting, setDeleting] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
+  // Repair/trouble history
+  const [history, setHistory] = useState<HistoryEntry[]>([])
+  const [showAddHistory, setShowAddHistory] = useState(false)
+  const [newSymptom, setNewSymptom] = useState('')
+  const [newTried, setNewTried] = useState('')
+  const [newStatus, setNewStatus] = useState('対応中')
+  const [savingHistory, setSavingHistory] = useState(false)
+
   useEffect(() => {
     fetch(`/api/appliances/${params.id}`)
       .then(r => {
@@ -47,7 +64,36 @@ export default function UserProductDetailPage({ params }: { params: { id: string
       })
       .then(d => d && setAppliance(d.appliance))
       .finally(() => setLoading(false))
+
+    fetch(`/api/appliances/${params.id}/history`)
+      .then(r => r.json())
+      .then(d => setHistory(d.history ?? []))
+      .catch(() => {})
   }, [params.id])
+
+  const handleAddHistory = async () => {
+    if (!newSymptom.trim()) return
+    setSavingHistory(true)
+    try {
+      const res = await fetch(`/api/appliances/${params.id}/history`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ symptom: newSymptom, tried_solutions: newTried, status: newStatus }),
+      })
+      if (res.ok) {
+        const d = await res.json()
+        setHistory(prev => [d.entry, ...prev])
+        setNewSymptom('')
+        setNewTried('')
+        setNewStatus('対応中')
+        setShowAddHistory(false)
+      }
+    } catch {
+      // silent
+    } finally {
+      setSavingHistory(false)
+    }
+  }
 
   const handleDelete = async () => {
     setDeleting(true)
@@ -181,6 +227,87 @@ export default function UserProductDetailPage({ params }: { params: { id: string
           </svg>
           この製品についてAIに相談
         </Link>
+
+        {/* Repair / Trouble History */}
+        <div style={{ background: 'white', border: '1px solid #E8ECF0', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,20,25,0.06)' }}>
+          <div style={{ padding: '12px 16px', borderBottom: '1px solid #E8ECF0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <p style={{ fontSize: 12, fontWeight: 700, color: '#5B6570', margin: 0 }}>修理・トラブル履歴</p>
+            <button
+              onClick={() => setShowAddHistory(v => !v)}
+              style={{ fontSize: 11, color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}
+            >
+              {showAddHistory ? '閉じる' : '+ 記録を追加'}
+            </button>
+          </div>
+
+          {/* Inline add form */}
+          {showAddHistory && (
+            <div style={{ padding: '12px 16px', borderBottom: '1px solid #E8ECF0', background: '#FAFBFC', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <textarea
+                placeholder="トラブルの内容（必須）"
+                value={newSymptom}
+                onChange={e => setNewSymptom(e.target.value)}
+                style={{ width: '100%', minHeight: 64, border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '8px 10px', fontSize: 13, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }}
+              />
+              <textarea
+                placeholder="試したこと（任意）"
+                value={newTried}
+                onChange={e => setNewTried(e.target.value)}
+                style={{ width: '100%', minHeight: 48, border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '8px 10px', fontSize: 13, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }}
+              />
+              <select
+                value={newStatus}
+                onChange={e => setNewStatus(e.target.value)}
+                style={{ height: 38, border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '0 10px', fontSize: 13, background: 'white' }}
+              >
+                <option value="対応中">対応中</option>
+                <option value="解決済み">解決済み</option>
+                <option value="修理依頼済み">修理依頼済み</option>
+              </select>
+              <button
+                onClick={handleAddHistory}
+                disabled={savingHistory || !newSymptom.trim()}
+                style={{
+                  height: 38, background: '#0F1419', color: 'white', border: 'none', borderRadius: 100,
+                  fontSize: 13, fontWeight: 700, cursor: (savingHistory || !newSymptom.trim()) ? 'not-allowed' : 'pointer',
+                  opacity: (savingHistory || !newSymptom.trim()) ? 0.5 : 1,
+                }}
+              >
+                {savingHistory ? '保存中...' : '保存する'}
+              </button>
+            </div>
+          )}
+
+          {/* History list */}
+          {history.length === 0 && !showAddHistory && (
+            <p style={{ fontSize: 12, color: '#98A2AE', textAlign: 'center', padding: '20px 16px', margin: 0 }}>
+              まだ記録はありません
+            </p>
+          )}
+          {history.map((h, i) => (
+            <div
+              key={h.id}
+              style={{ padding: '12px 16px', borderBottom: i < history.length - 1 ? '1px solid #F4F6F8' : 'none' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <span style={{ fontSize: 10, color: '#98A2AE' }}>
+                  {new Date(h.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })}
+                </span>
+                <span style={{
+                  fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 100,
+                  background: h.status === '解決済み' ? '#DCFCE7' : h.status === '修理依頼済み' ? '#FEF3C7' : '#EFF6FF',
+                  color: h.status === '解決済み' ? '#059669' : h.status === '修理依頼済み' ? '#D97706' : '#2563EB',
+                }}>
+                  {h.status}
+                </span>
+              </div>
+              <p style={{ fontSize: 13, fontWeight: 500, color: '#0F1419', margin: '0 0 4px' }}>{h.symptom}</p>
+              {h.tried_solutions && (
+                <p style={{ fontSize: 11, color: '#5B6570', margin: 0 }}>試したこと: {h.tried_solutions}</p>
+              )}
+            </div>
+          ))}
+        </div>
 
         {/* Delete */}
         {!confirmDelete ? (
