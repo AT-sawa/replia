@@ -189,7 +189,8 @@ export default function RegisterPage() {
         }),
       })
       if (!res.ok) {
-        setSaveError('保存に失敗しました。もう一度お試しください。')
+        const errData = await res.json().catch(() => ({}))
+        setSaveError(`保存失敗 [${res.status}]: ${errData.error ?? 'unknown error'}`)
         setSubmitted(false)
         return
       }
