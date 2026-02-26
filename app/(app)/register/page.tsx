@@ -147,14 +147,13 @@ export default function RegisterPage() {
         }),
       })
       if (!res.ok) {
-        const d = await res.json()
-        setSaveError(d.error ?? '保存に失敗しました')
+        setSaveError('保存に失敗しました。もう一度お試しください。')
         setSubmitted(false)
         return
       }
       router.push('/my-appliances')
     } catch {
-      setSaveError('保存に失敗しました。もう一度お試しください。')
+      setSaveError('ネットワークエラーが発生しました。接続を確認してください。')
       setSubmitted(false)
     }
   }
@@ -265,7 +264,7 @@ export default function RegisterPage() {
 
           {/* Appliance Type */}
           <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>製品の種類 <span style={{ color: '#DC2626' }}>*</span></label>
+            <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>製品の種類</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {APPLIANCE_TYPES.map(t => (
                 <button

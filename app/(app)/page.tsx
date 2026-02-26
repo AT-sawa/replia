@@ -87,7 +87,7 @@ export default function HomePage() {
       </div>
 
       {/* Search Bar */}
-      <form onSubmit={handleSearch} style={{ marginBottom: 24 }}>
+      <form onSubmit={handleSearch} style={{ marginBottom: 24, width: '100%', boxSizing: 'border-box' }}>
         <div
           style={{
             background: '#F4F6F8',
@@ -97,6 +97,9 @@ export default function HomePage() {
             alignItems: 'center',
             padding: '0 10px 0 16px',
             gap: 10,
+            overflow: 'hidden',
+            width: '100%',
+            boxSizing: 'border-box',
           }}
         >
           {/* Search Icon */}
@@ -112,7 +115,9 @@ export default function HomePage() {
             placeholder="家電のトラブルを入力..."
             style={{
               flex: 1,
+              minWidth: 0,
               border: 'none',
+              outline: 'none',
               background: 'transparent',
               fontSize: 14,
               color: '#0F1419',

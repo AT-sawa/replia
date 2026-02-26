@@ -152,6 +152,18 @@ export default function UserProductDetailPage({ params }: { params: { id: string
             ))}
         </div>
 
+        {/* Edit button */}
+        <Link
+          href={`/product/user/${params.id}/edit`}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'white', color: '#0F1419', border: '1.5px solid #E8ECF0', borderRadius: 100, height: 46, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M11 4H4C2.9 4 2 4.9 2 6v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7" stroke="#0F1419" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5Z" stroke="#0F1419" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          編集する
+        </Link>
+
         {/* AI Chat button */}
         <Link href={chatHref} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: '#0F1419', color: 'white', borderRadius: 100, height: 50, fontSize: 15, fontWeight: 700, textDecoration: 'none' }}>
           <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
