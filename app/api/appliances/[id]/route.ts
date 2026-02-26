@@ -25,7 +25,22 @@ function rowToAppliance(row: any) {
     receipt_photo_url: row.receipt_photo_url        ?? null,
     warranty_photo_url:row.warranty_photo_url       ?? null,
     manual_url:        row.manual_url               ?? null,
-    notes:             row.notes                   ?? null,
+  }
+}
+
+// notes は別クエリで取得（カラム未追加でも安全にfallback）
+async function fetchNotes(admin: ReturnType<typeof createAdminClient>, id: string, userId: string): Promise<string | null> {
+  try {
+    const { data, error } = await admin
+      .from('user_products')
+      .select('notes')
+      .eq('id', id)
+      .eq('user_id', userId)
+      .single()
+    if (error) return null
+    return (data as { notes?: string | null })?.notes ?? null
+  } catch {
+    return null
   }
 }
 
@@ -38,7 +53,6 @@ const PRODUCT_SELECT = `
   receipt_photo_url,
   warranty_photo_url,
   manual_url,
-  notes,
   created_at,
   products (
     id,
@@ -58,6 +72,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const admin = createAdminClient()
+
+  // 主要データ取得（notesは含まない — カラム未追加でも安全）
   const { data, error } = await admin
     .from('user_products')
     .select(PRODUCT_SELECT)
@@ -66,7 +82,11 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     .single()
 
   if (error || !data) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json({ appliance: rowToAppliance(data) })
+
+  // notes は別クエリ（カラムがなければ null が返るだけ）
+  const notes = await fetchNotes(admin, params.id, user.id)
+
+  return NextResponse.json({ appliance: { ...rowToAppliance(data), notes } })
 }
 
 // PATCH /api/appliances/[id]
@@ -108,7 +128,17 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
   }
 
-  // Build user_products update
+  // notes は別クエリで更新（カラム未追加ならエラーを無視）
+  if (notes !== undefined) {
+    await admin
+      .from('user_products')
+      .update({ notes })
+      .eq('id', params.id)
+      .eq('user_id', user.id)
+    // エラーが返っても無視（カラム未追加の場合は保存できないだけ）
+  }
+
+  // Build user_products update（notes は除く）
   const userProductUpdates: Record<string, unknown> = {}
   const resolvedPurchaseDate   = purchase_date !== undefined ? (purchase_date || null) : current.purchase_date
   const resolvedWarrantyMonths = warranty_months ?? 12
@@ -121,7 +151,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (receipt_photo_url  !== undefined) userProductUpdates.receipt_photo_url  = receipt_photo_url
   if (warranty_photo_url !== undefined) userProductUpdates.warranty_photo_url = warranty_photo_url
   if (manual_url         !== undefined) userProductUpdates.manual_url         = manual_url
-  if (notes              !== undefined) userProductUpdates.notes              = notes
 
   if ((purchase_date !== undefined || warranty_months !== undefined) && resolvedPurchaseDate) {
     const end = new Date(resolvedPurchaseDate)
@@ -137,7 +166,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       .eq('id', params.id)
       .eq('user_id', user.id)
       .single()
-    return NextResponse.json({ appliance: rowToAppliance(cur) })
+    const currentNotes = await fetchNotes(admin, params.id, user.id)
+    return NextResponse.json({ appliance: { ...rowToAppliance(cur), notes: currentNotes } })
   }
 
   const { data: updated, error } = await admin
@@ -149,7 +179,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ appliance: rowToAppliance(updated) })
+
+  const updatedNotes = await fetchNotes(admin, params.id, user.id)
+  return NextResponse.json({ appliance: { ...rowToAppliance(updated), notes: updatedNotes } })
 }
 
 // DELETE /api/appliances/[id]
