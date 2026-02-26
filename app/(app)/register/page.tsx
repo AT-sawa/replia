@@ -14,7 +14,9 @@ export default function RegisterPage() {
   const [applianceType, setApplianceType] = useState('')
   const [brand, setBrand] = useState('')
   const [modelNumber, setModelNumber] = useState('')
-  const [purchaseDate, setPurchaseDate] = useState('')
+  const [purchaseYear, setPurchaseYear] = useState('')
+  const [purchaseMonth, setPurchaseMonth] = useState('')
+  const [purchaseDay, setPurchaseDay] = useState('')
   const [storeName, setStoreName] = useState('')
   const [saveError, setSaveError] = useState('')
   const [submitted, setSubmitted] = useState(false)
@@ -80,7 +82,12 @@ export default function RegisterPage() {
       const data = await res.json()
 
       if (data.modelNumber) setModelNumber(data.modelNumber)
-      if (data.purchaseDate) setPurchaseDate(data.purchaseDate)
+      if (data.purchaseDate) {
+        const [y, m, d] = data.purchaseDate.split('-')
+        if (y) setPurchaseYear(y)
+        if (m) setPurchaseMonth(String(parseInt(m)))
+        if (d) setPurchaseDay(String(parseInt(d)))
+      }
       if (data.storeName) setStoreName(data.storeName)
       setReceiptSuccess(true)
     } catch {
@@ -173,7 +180,9 @@ export default function RegisterPage() {
           appliance_type:  applianceType || 'その他',
           brand,
           model:           modelNumber,
-          purchase_date:   purchaseDate || null,
+          purchase_date:   (purchaseYear && purchaseMonth && purchaseDay)
+            ? `${purchaseYear}-${purchaseMonth.padStart(2,'0')}-${purchaseDay.padStart(2,'0')}`
+            : null,
           warranty_months: 12,
           store_name:      storeName,
           image_url:       productImageUrl,
@@ -316,16 +325,6 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Brand */}
-          <div>
-            <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>ブランド・メーカー</label>
-            <input
-              type="text" value={brand} onChange={(e) => setBrand(e.target.value)}
-              placeholder="例：Panasonic, SHARP, HITACHI"
-              style={{ width: '100%', height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 14px', fontSize: 14, color: '#0F1419', background: 'white', fontFamily: "'Zen Kaku Gothic New', sans-serif", boxSizing: 'border-box' }}
-            />
-          </div>
-
           {/* Model Number + Barcode Scan */}
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>型番</label>
@@ -347,13 +346,60 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Purchase Date (optional) */}
+          {/* Brand */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>ブランド・メーカー</label>
+            <input
+              type="text" value={brand} onChange={(e) => setBrand(e.target.value)}
+              placeholder="例：Panasonic, SHARP, HITACHI"
+              style={{ width: '100%', height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 14px', fontSize: 14, color: '#0F1419', background: 'white', fontFamily: "'Zen Kaku Gothic New', sans-serif", boxSizing: 'border-box' }}
+            />
+          </div>
+
+          {/* Purchase Date — year / month / day selects */}
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>購入日</label>
-            <input
-              type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)}
-              style={{ width: '100%', height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 14px', fontSize: 14, color: '#0F1419', background: 'white', fontFamily: "'DM Sans', sans-serif" }}
-            />
+            <div style={{ display: 'flex', gap: 8 }}>
+              {/* Year */}
+              <select
+                value={purchaseYear}
+                onChange={(e) => setPurchaseYear(e.target.value)}
+                style={{ flex: 2, height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 10px', fontSize: 14, color: purchaseYear ? '#0F1419' : '#98A2AE', background: 'white', appearance: 'none' }}
+              >
+                <option value="">年</option>
+                {Array.from({ length: new Date().getFullYear() - 1999 }, (_, i) => new Date().getFullYear() - i).map(y => (
+                  <option key={y} value={String(y)}>{y}年</option>
+                ))}
+              </select>
+              {/* Month */}
+              <select
+                value={purchaseMonth}
+                onChange={(e) => setPurchaseMonth(e.target.value)}
+                style={{ flex: 1, height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 10px', fontSize: 14, color: purchaseMonth ? '#0F1419' : '#98A2AE', background: 'white', appearance: 'none' }}
+              >
+                <option value="">月</option>
+                {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                  <option key={m} value={String(m)}>{m}月</option>
+                ))}
+              </select>
+              {/* Day */}
+              <select
+                value={purchaseDay}
+                onChange={(e) => setPurchaseDay(e.target.value)}
+                style={{ flex: 1, height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 10px', fontSize: 14, color: purchaseDay ? '#0F1419' : '#98A2AE', background: 'white', appearance: 'none' }}
+              >
+                <option value="">日</option>
+                {Array.from(
+                  { length: (purchaseYear && purchaseMonth)
+                    ? new Date(parseInt(purchaseYear), parseInt(purchaseMonth), 0).getDate()
+                    : 31
+                  },
+                  (_, i) => i + 1
+                ).map(d => (
+                  <option key={d} value={String(d)}>{d}日</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           {/* Store Name */}

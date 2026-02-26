@@ -5,7 +5,7 @@ interface ApplianceIconProps {
 
 export function ApplianceIcon({ type, size = 24 }: ApplianceIconProps) {
   const s = { width: size, height: size, display: 'block' as const }
-  const t = type.replace('全自動', '').replace('液晶', '')
+  const t = type.replace('全自動', '').replace('液晶', '').replace('ドラム式', '')
 
   if (t.includes('エアコン')) {
     return (
@@ -57,6 +57,17 @@ export function ApplianceIcon({ type, size = 24 }: ApplianceIconProps) {
     )
   }
 
+  if (t.includes('食洗機') || t.includes('食器洗い')) {
+    return (
+      <svg style={s} viewBox="0 0 24 24" fill="none">
+        <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M3 8h18" stroke="currentColor" strokeWidth="1.5" />
+        <ellipse cx="9" cy="14" rx="3" ry="4" stroke="currentColor" strokeWidth="1.5" />
+        <ellipse cx="16" cy="14" rx="3" ry="4" stroke="currentColor" strokeWidth="1.5" />
+      </svg>
+    )
+  }
+
   if (t.includes('掃除機')) {
     return (
       <svg style={s} viewBox="0 0 24 24" fill="none">
@@ -67,7 +78,27 @@ export function ApplianceIcon({ type, size = 24 }: ApplianceIconProps) {
     )
   }
 
-  // Default appliance icon
+  if (t.includes('炊飯器')) {
+    return (
+      <svg style={s} viewBox="0 0 24 24" fill="none">
+        <path d="M5 11c0-2.21 3.13-4 7-4s7 1.79 7 4v6a2 2 0 01-2 2H7a2 2 0 01-2-2v-6z" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M5 14h14" stroke="currentColor" strokeWidth="1.5" />
+        <path d="M9 7C9 5.5 10.34 4 12 4s3 1.5 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    )
+  }
+
+  if (t.includes('ドライヤー')) {
+    return (
+      <svg style={s} viewBox="0 0 24 24" fill="none">
+        <path d="M3 6h11a3 3 0 013 3v2a3 3 0 01-3 3H3L1 9l2-3z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+        <path d="M10 14l-1.5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+        <path d="M18 10v1M20 8l1-1M21 11h1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      </svg>
+    )
+  }
+
+  // Default
   return (
     <svg style={s} viewBox="0 0 24 24" fill="none">
       <rect x="3" y="3" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.5" />
