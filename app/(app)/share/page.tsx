@@ -64,7 +64,7 @@ export default function SharePage() {
     if (!household) return
     if (navigator.share) {
       navigator.share({
-        title: 'Replia 家族共有',
+        title: 'Replia データ共有',
         text: `Repliaの招待コード: ${household.code}\nhttps://replia-eta.vercel.app/share`,
       }).catch(() => {})
     } else {
@@ -78,8 +78,8 @@ export default function SharePage() {
     <div style={{ background: '#FAFBFC', minHeight: '100%' }}>
       {/* Header */}
       <div style={{ background: 'white', borderBottom: '1px solid #E8ECF0', padding: '14px 16px' }}>
-        <p style={{ fontSize: 18, fontWeight: 700, color: '#0F1419', margin: 0 }}>家族共有</p>
-        <p style={{ fontSize: 12, color: '#98A2AE', margin: '2px 0 0' }}>招待コードで家族と家電情報をシェア</p>
+        <p style={{ fontSize: 18, fontWeight: 700, color: '#0F1419', margin: 0 }}>データ共有</p>
+        <p style={{ fontSize: 12, color: '#98A2AE', margin: '2px 0 0' }}>招待コードで家電情報をシェア</p>
       </div>
 
       <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -196,9 +196,9 @@ export default function SharePage() {
                   <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" stroke="#5B6570" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </div>
-              <p style={{ fontSize: 15, fontWeight: 700, color: '#0F1419', margin: '0 0 6px' }}>家族と家電をシェアしよう</p>
+              <p style={{ fontSize: 15, fontWeight: 700, color: '#0F1419', margin: '0 0 6px' }}>家電データをシェアしよう</p>
               <p style={{ fontSize: 13, color: '#98A2AE', margin: 0, lineHeight: 1.6 }}>
-                グループを作成して招待コードを家族に送るか、<br />受け取ったコードを入力して参加できます
+                グループを作成して招待コードを共有するか、<br />受け取ったコードを入力して参加できます
               </p>
             </div>
 

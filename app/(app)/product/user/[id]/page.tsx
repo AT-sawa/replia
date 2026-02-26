@@ -15,6 +15,7 @@ interface Appliance {
   purchase_date: string | null
   warranty_months: number
   store_name: string
+  image_url: string | null
   created_at: string
 }
 
@@ -101,8 +102,17 @@ export default function UserProductDetailPage({ params }: { params: { id: string
 
         {/* Product card */}
         <div style={{ background: 'white', border: '1px solid #E8ECF0', borderRadius: 16, padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, boxShadow: '0 1px 4px rgba(15,20,25,0.06)' }}>
-          <div style={{ width: 72, height: 72, background: '#F4F6F8', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <ApplianceIcon type={appliance.appliance_type} size={40} />
+          <div style={{ width: 72, height: 72, background: '#F4F6F8', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+            {appliance.image_url ? (
+              <img
+                src={appliance.image_url}
+                alt={appliance.appliance_type}
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+              />
+            ) : (
+              <ApplianceIcon type={appliance.appliance_type} size={40} />
+            )}
           </div>
           <div style={{ textAlign: 'center' }}>
             <p style={{ fontSize: 18, fontWeight: 700, color: '#0F1419', margin: 0 }}>{appliance.appliance_type}</p>

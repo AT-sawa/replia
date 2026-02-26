@@ -67,7 +67,7 @@ const ShareIcon = ({ active }: NavIconProps) => (
 const navItems = [
   { href: '/', label: 'ホーム', Icon: HomeIcon },
   { href: '/my-appliances', label: 'マイ家電', Icon: ApplianceIcon },
-  { href: '/share', label: '家族共有', Icon: ShareIcon },
+  { href: '/share', label: 'データ共有', Icon: ShareIcon },
   { href: '/mypage', label: 'マイページ', Icon: UserIcon },
 ]
 

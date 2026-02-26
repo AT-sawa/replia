@@ -17,8 +17,9 @@ interface ApplianceItem {
   status: WarrantyStatus
   daysLeft: number
   purchaseDateMs: number
-  href: string   // link target
+  href: string
   isUser: boolean
+  imageUrl: string | null
 }
 
 // ── helpers ──────────────────────────────────────────────────────────────────
@@ -45,6 +46,7 @@ function dbToItem(a: any): ApplianceItem {
     purchaseDateMs,
     href:           `/product/user/${a.id}`,
     isUser:         true,
+    imageUrl:       a.image_url ?? null,
   }
 }
 
@@ -197,8 +199,17 @@ export default function MyAppliancesPage() {
                   }}
                 >
                   <div className="appliance-card-img-wrap">
-                    <div style={{ width: 44, height: 44, background: '#F4F6F8', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <ApplianceIcon type={item.name} size={24} />
+                    <div style={{ width: 44, height: 44, background: '#F4F6F8', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                      {item.imageUrl ? (
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                        />
+                      ) : (
+                        <ApplianceIcon type={item.name} size={24} />
+                      )}
                     </div>
                   </div>
                   <div className="appliance-card-body" style={{ flex: 1, minWidth: 0 }}>

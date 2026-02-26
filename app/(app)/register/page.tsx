@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
+import { ApplianceIcon } from '@/components/ui/ApplianceIcon'
 
 const APPLIANCE_TYPES = [
   'エアコン', '洗濯機', '冷蔵庫', 'テレビ', '電子レンジ',
@@ -17,6 +18,32 @@ export default function RegisterPage() {
   const [storeName, setStoreName] = useState('')
   const [saveError, setSaveError] = useState('')
   const [submitted, setSubmitted] = useState(false)
+
+  // Product image from model number
+  const [productImageUrl, setProductImageUrl] = useState<string | null>(null)
+  const [imageLoading, setImageLoading] = useState(false)
+
+  // Auto-fetch product image when model number changes (debounced)
+  useEffect(() => {
+    const trimmed = modelNumber.trim()
+    if (trimmed.length < 3) {
+      setProductImageUrl(null)
+      return
+    }
+    const timer = setTimeout(async () => {
+      setImageLoading(true)
+      try {
+        const res = await fetch(`/api/product-image?model=${encodeURIComponent(trimmed)}`)
+        const data = await res.json()
+        setProductImageUrl(data.imageUrl ?? null)
+      } catch {
+        setProductImageUrl(null)
+      } finally {
+        setImageLoading(false)
+      }
+    }, 900)
+    return () => clearTimeout(timer)
+  }, [modelNumber])
 
   // Receipt scanner
   const [receiptLoading, setReceiptLoading] = useState(false)
@@ -144,6 +171,7 @@ export default function RegisterPage() {
           purchase_date:   purchaseDate || null,
           warranty_months: 12,
           store_name:      storeName,
+          image_url:       productImageUrl,
         }),
       })
       if (!res.ok) {
@@ -160,26 +188,22 @@ export default function RegisterPage() {
 
   return (
     <div style={{ background: '#FAFBFC', minHeight: '100%' }}>
+      <style>{`@keyframes scanLine{0%{top:12%}50%{top:82%}100%{top:12%}}@keyframes spin{to{transform:rotate(360deg)}}`}</style>
 
       {/* ── Barcode Scanner Modal ── */}
       {showScanner && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 24 }}>
-          <style>{`@keyframes scanLine{0%{top:12%}50%{top:82%}100%{top:12%}}@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-
           <div style={{ position: 'relative', width: '100%', maxWidth: 300, aspectRatio: '4/3', borderRadius: 12, overflow: 'hidden', background: '#000' }}>
             <video ref={videoRef} playsInline muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             {!scanError && (
               <>
-                {/* Corner marks */}
                 {[{top:16,left:16,bt:'borderTop',bl:'borderLeft',br:'2px 0 0 0'},{top:16,right:16,bt:'borderTop',bl:'borderRight',br:'0 2px 0 0'},{bottom:16,left:16,bt:'borderBottom',bl:'borderLeft',br:'0 0 0 2px'},{bottom:16,right:16,bt:'borderBottom',bl:'borderRight',br:'0 0 2px 0'}].map((c, i) => (
                   <div key={i} style={{ position: 'absolute', ...Object.fromEntries(Object.entries(c).filter(([k]) => !['bt','bl','br'].includes(k))), width: 24, height: 24, [c.bt]: '2px solid white', [c.bl]: '2px solid white', borderRadius: c.br }} />
                 ))}
-                {/* Scan line */}
                 <div style={{ position: 'absolute', left: '8%', right: '8%', height: 2, background: 'rgba(255,255,255,0.8)', animation: 'scanLine 2s ease-in-out infinite' }} />
               </>
             )}
           </div>
-
           <p style={{ color: 'white', fontSize: 13, marginTop: 18, textAlign: 'center', lineHeight: 1.7, whiteSpace: 'pre-line', maxWidth: 280 }}>
             {scanError || scanMessage}
           </p>
@@ -200,11 +224,25 @@ export default function RegisterPage() {
       <form onSubmit={handleSubmit} style={{ padding: 16 }}>
         {/* Product Preview Card */}
         <div style={{ background: 'white', border: '1px solid #E8ECF0', borderRadius: 12, padding: 14, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 1px 4px rgba(15,20,25,0.06)' }}>
-          <div style={{ width: 44, height: 44, background: '#F4F6F8', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-              <rect x="2" y="3" width="20" height="14" rx="2" stroke={applianceType ? '#0F1419' : '#C5CAD0'} strokeWidth="1.5" />
-              <path d="M8 21H16M12 17V21" stroke={applianceType ? '#0F1419' : '#C5CAD0'} strokeWidth="1.5" strokeLinecap="round" />
-            </svg>
+          {/* Image / Icon area */}
+          <div style={{ width: 52, height: 52, background: '#F4F6F8', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
+            {productImageUrl ? (
+              <img
+                src={productImageUrl}
+                alt={applianceType}
+                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                onError={() => setProductImageUrl(null)}
+              />
+            ) : imageLoading ? (
+              <div style={{ width: 20, height: 20, border: '2px solid #E8ECF0', borderTopColor: '#0F1419', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+            ) : applianceType ? (
+              <span style={{ color: '#5B6570' }}><ApplianceIcon type={applianceType} size={26} /></span>
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <rect x="2" y="3" width="20" height="14" rx="2" stroke="#C5CAD0" strokeWidth="1.5" />
+                <path d="M8 21H16M12 17V21" stroke="#C5CAD0" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+            )}
           </div>
           <div style={{ minWidth: 0 }}>
             <p style={{ fontSize: 14, fontWeight: 700, color: applianceType ? '#0F1419' : '#C5CAD0', margin: 0 }}>
@@ -217,13 +255,7 @@ export default function RegisterPage() {
         </div>
 
         {/* ── Receipt scan ── */}
-        <input
-          ref={receiptInputRef}
-          type="file"
-          accept="image/*"
-          style={{ display: 'none' }}
-          onChange={handleReceiptFile}
-        />
+        <input ref={receiptInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleReceiptFile} />
         <button
           type="button"
           onClick={() => receiptInputRef.current?.click()}
@@ -231,14 +263,10 @@ export default function RegisterPage() {
           style={{
             width: '100%',
             border: `1.5px dashed ${receiptSuccess ? '#86EFAC' : '#E8ECF0'}`,
-            borderRadius: 12,
-            padding: '13px 16px',
+            borderRadius: 12, padding: '13px 16px',
             background: receiptSuccess ? '#F0FDF4' : 'white',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            cursor: receiptLoading ? 'not-allowed' : 'pointer',
-            marginBottom: 16,
+            display: 'flex', alignItems: 'center', gap: 10,
+            cursor: receiptLoading ? 'not-allowed' : 'pointer', marginBottom: 16,
           }}
         >
           <div style={{ width: 36, height: 36, background: '#F4F6F8', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -268,8 +296,7 @@ export default function RegisterPage() {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {APPLIANCE_TYPES.map(t => (
                 <button
-                  key={t}
-                  type="button"
+                  key={t} type="button"
                   onClick={() => setApplianceType(t)}
                   style={{
                     height: 32, padding: '0 12px', borderRadius: 100,
@@ -288,9 +315,7 @@ export default function RegisterPage() {
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>ブランド・メーカー</label>
             <input
-              type="text"
-              value={brand}
-              onChange={(e) => setBrand(e.target.value)}
+              type="text" value={brand} onChange={(e) => setBrand(e.target.value)}
               placeholder="例：Panasonic, SHARP, HITACHI"
               style={{ width: '100%', height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 14px', fontSize: 14, color: '#0F1419', background: 'white', fontFamily: "'Zen Kaku Gothic New', sans-serif", boxSizing: 'border-box' }}
             />
@@ -301,16 +326,12 @@ export default function RegisterPage() {
             <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>型番</label>
             <div style={{ display: 'flex', gap: 8 }}>
               <input
-                type="text"
-                value={modelNumber}
-                onChange={(e) => setModelNumber(e.target.value)}
+                type="text" value={modelNumber} onChange={(e) => setModelNumber(e.target.value)}
                 placeholder="例：NA-VX900BL"
                 style={{ flex: 1, height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 14px', fontSize: 14, color: '#0F1419', background: 'white', fontFamily: "'DM Sans', sans-serif" }}
               />
               <button
-                type="button"
-                onClick={startScanner}
-                title="バーコードをスキャン"
+                type="button" onClick={startScanner} title="バーコードをスキャン"
                 style={{ height: 46, width: 46, background: '#0F1419', border: 'none', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}
               >
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -321,41 +342,37 @@ export default function RegisterPage() {
             </div>
           </div>
 
-          {/* Purchase Date */}
+          {/* Purchase Date (optional) */}
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>購入日</label>
-            <input type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)} required style={{ width: '100%', height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 14px', fontSize: 14, color: '#0F1419', background: 'white', fontFamily: "'DM Sans', sans-serif" }} />
+            <input
+              type="date" value={purchaseDate} onChange={(e) => setPurchaseDate(e.target.value)}
+              style={{ width: '100%', height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 14px', fontSize: 14, color: '#0F1419', background: 'white', fontFamily: "'DM Sans', sans-serif" }}
+            />
           </div>
 
           {/* Store Name */}
           <div>
             <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>購入店舗</label>
-            <input type="text" value={storeName} onChange={(e) => setStoreName(e.target.value)} placeholder="例：ヨドバシカメラ 新宿店" style={{ width: '100%', height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 14px', fontSize: 14, color: '#0F1419', background: 'white', fontFamily: "'Zen Kaku Gothic New', sans-serif" }} />
+            <input
+              type="text" value={storeName} onChange={(e) => setStoreName(e.target.value)}
+              placeholder="例：ヨドバシカメラ 新宿店"
+              style={{ width: '100%', height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 14px', fontSize: 14, color: '#0F1419', background: 'white', fontFamily: "'Zen Kaku Gothic New', sans-serif" }}
+            />
           </div>
         </div>
 
         {/* Photo Upload */}
         <div>
           <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>領収書・保証書の写真</label>
-          <input
-            ref={photoInputRef}
-            type="file"
-            accept="image/*,application/pdf"
-            style={{ display: 'none' }}
-            onChange={handlePhotoFile}
-          />
+          <input ref={photoInputRef} type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={handlePhotoFile} />
           <div
             onClick={() => photoInputRef.current?.click()}
             style={{
               border: `2px dashed ${photoName ? '#86EFAC' : '#E8ECF0'}`,
-              borderRadius: 12,
-              padding: '28px 20px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: 8,
-              cursor: 'pointer',
-              marginBottom: 20,
+              borderRadius: 12, padding: '28px 20px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8,
+              cursor: 'pointer', marginBottom: 20,
               background: photoName ? '#F0FDF4' : 'white',
             }}
           >
@@ -378,11 +395,12 @@ export default function RegisterPage() {
         </div>
 
         {saveError && (
-          <p style={{ fontSize: 12, color: '#DC2626', textAlign: 'center', marginBottom: 8, marginTop: -4 }}>
-            {saveError}
-          </p>
+          <p style={{ fontSize: 12, color: '#DC2626', textAlign: 'center', marginBottom: 8, marginTop: -4 }}>{saveError}</p>
         )}
-        <button type="submit" disabled={submitted} style={{ background: '#0F1419', color: 'white', width: '100%', height: 50, borderRadius: 100, border: 'none', fontSize: 15, fontWeight: 700, cursor: submitted ? 'not-allowed' : 'pointer', opacity: submitted ? 0.7 : 1 }}>
+        <button
+          type="submit" disabled={submitted}
+          style={{ background: '#0F1419', color: 'white', width: '100%', height: 50, borderRadius: 100, border: 'none', fontSize: 15, fontWeight: 700, cursor: submitted ? 'not-allowed' : 'pointer', opacity: submitted ? 0.7 : 1 }}
+        >
           {submitted ? '登録中...' : '保証登録を完了する'}
         </button>
       </form>

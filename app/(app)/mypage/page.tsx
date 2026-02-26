@@ -46,7 +46,7 @@ const IconDoc = () => (
 )
 
 const menuItems = [
-  { Icon: IconUsers,   label: '家族共有',            href: '/share' },
+  { Icon: IconUsers,   label: 'データ共有',           href: '/share' },
   { Icon: IconBell,    label: '通知設定',           href: '/notifications' },
   { Icon: IconHistory, label: '相談履歴',            href: '/chat' },
   { Icon: IconLock,    label: 'アカウント設定',       href: '/account' },
@@ -65,8 +65,9 @@ export default function MyPage() {
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data }) => {
-      const user = data.user
+    // Use getSession() (reads from local storage, no network round-trip)
+    supabase.auth.getSession().then(({ data }) => {
+      const user = data.session?.user
       if (!user) return
       setEmail(user.email ?? null)
       const name = user.user_metadata?.full_name || user.email?.split('@')[0] || ''
