@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function rowToAppliance(row: any) {
@@ -42,13 +43,14 @@ const PRODUCT_SELECT = `
   )
 `
 
-// GET /api/appliances/[id] — fetch a single appliance
+// GET /api/appliances/[id]
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const supabase = createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { data, error } = await supabase
+  const admin = createAdminClient()
+  const { data, error } = await admin
     .from('user_products')
     .select(PRODUCT_SELECT)
     .eq('id', params.id)
@@ -59,14 +61,16 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   return NextResponse.json({ appliance: rowToAppliance(data) })
 }
 
-// PATCH /api/appliances/[id] — update an appliance
+// PATCH /api/appliances/[id]
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const supabase = createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
+  const admin = createAdminClient()
+
   // Get current record to find product_id
-  const { data: current, error: ce } = await supabase
+  const { data: current, error: ce } = await admin
     .from('user_products')
     .select('product_id, purchase_date, warranty_end')
     .eq('id', params.id)
@@ -85,19 +89,19 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       productUpdates.product_name = appliance_type
       productUpdates.category     = appliance_type
     }
-    if (brand           !== undefined) productUpdates.manufacturer_name       = brand
-    if (model           !== undefined) productUpdates.model_number             = model || 'カスタム'
-    if (image_url       !== undefined) productUpdates.image_url                = image_url
-    if (warranty_months !== undefined) productUpdates.default_warranty_months  = warranty_months
+    if (brand           !== undefined) productUpdates.manufacturer_name      = brand
+    if (model           !== undefined) productUpdates.model_number            = model || 'カスタム'
+    if (image_url       !== undefined) productUpdates.image_url               = image_url
+    if (warranty_months !== undefined) productUpdates.default_warranty_months = warranty_months
 
     if (Object.keys(productUpdates).length > 0) {
-      await supabase.from('products').update(productUpdates).eq('id', current.product_id)
+      await admin.from('products').update(productUpdates).eq('id', current.product_id)
     }
   }
 
-  // Update user_products
+  // Build user_products update
   const userProductUpdates: Record<string, unknown> = {}
-  const resolvedPurchaseDate = purchase_date !== undefined ? (purchase_date || null) : current.purchase_date
+  const resolvedPurchaseDate   = purchase_date !== undefined ? (purchase_date || null) : current.purchase_date
   const resolvedWarrantyMonths = warranty_months ?? 12
 
   if (purchase_date !== undefined) {
@@ -106,16 +110,15 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
   if (store_name !== undefined) userProductUpdates.purchase_store = store_name
 
-  // Recalculate warranty_end whenever purchase_date or warranty_months changed
   if ((purchase_date !== undefined || warranty_months !== undefined) && resolvedPurchaseDate) {
     const end = new Date(resolvedPurchaseDate)
     end.setMonth(end.getMonth() + resolvedWarrantyMonths)
     userProductUpdates.warranty_end = end.toISOString().split('T')[0]
   }
 
-  // If nothing in user_products changed, just return current data
+  // If nothing in user_products changed, just fetch and return
   if (Object.keys(userProductUpdates).length === 0) {
-    const { data: cur } = await supabase
+    const { data: cur } = await admin
       .from('user_products')
       .select(PRODUCT_SELECT)
       .eq('id', params.id)
@@ -124,7 +127,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     return NextResponse.json({ appliance: rowToAppliance(cur) })
   }
 
-  const { data: updated, error } = await supabase
+  const { data: updated, error } = await admin
     .from('user_products')
     .update(userProductUpdates)
     .eq('id', params.id)
@@ -136,13 +139,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   return NextResponse.json({ appliance: rowToAppliance(updated) })
 }
 
-// DELETE /api/appliances/[id] — delete a user_product entry
+// DELETE /api/appliances/[id]
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
   const supabase = createClient()
   const { data: { user }, error: authError } = await supabase.auth.getUser()
   if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { error } = await supabase
+  const admin = createAdminClient()
+  const { error } = await admin
     .from('user_products')
     .delete()
     .eq('id', params.id)
