@@ -157,7 +157,7 @@ export default function UserProductDetailPage({ params }: { params: { id: string
   const [savingHistory, setSavingHistory] = useState(false)
 
   // Accordion open/close (default: all closed)
-  const [showInfo, setShowInfo] = useState(false)
+  const [showInfo, setShowInfo] = useState(true)
   const [showMemo, setShowMemo] = useState(false)
   const [showMaintenance, setShowMaintenance] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
