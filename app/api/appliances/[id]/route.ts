@@ -24,23 +24,27 @@ function rowToAppliance(row: any) {
     created_at:        row.created_at,
     receipt_photo_url: row.receipt_photo_url        ?? null,
     warranty_photo_url:row.warranty_photo_url       ?? null,
-    manual_url:        row.manual_url               ?? null,
   }
 }
 
-// notes は別クエリで取得（カラム未追加でも安全にfallback）
-async function fetchNotes(admin: ReturnType<typeof createAdminClient>, id: string, userId: string): Promise<string | null> {
+// notes / manual_url は別クエリで取得（カラム未追加でも安全にfallback）
+async function fetchOptionalFields(
+  admin: ReturnType<typeof createAdminClient>,
+  id: string,
+  userId: string
+): Promise<{ notes: string | null; manual_url: string | null }> {
   try {
     const { data, error } = await admin
       .from('user_products')
-      .select('notes')
+      .select('notes, manual_url')
       .eq('id', id)
       .eq('user_id', userId)
       .single()
-    if (error) return null
-    return (data as { notes?: string | null })?.notes ?? null
+    if (error) return { notes: null, manual_url: null }
+    const row = data as { notes?: string | null; manual_url?: string | null }
+    return { notes: row?.notes ?? null, manual_url: row?.manual_url ?? null }
   } catch {
-    return null
+    return { notes: null, manual_url: null }
   }
 }
 
@@ -52,7 +56,6 @@ const PRODUCT_SELECT = `
   warranty_end,
   receipt_photo_url,
   warranty_photo_url,
-  manual_url,
   created_at,
   products (
     id,
@@ -83,10 +86,10 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 
   if (error || !data) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  // notes は別クエリ（カラムがなければ null が返るだけ）
-  const notes = await fetchNotes(admin, params.id, user.id)
+  // notes / manual_url は別クエリ（カラムがなければ null が返るだけ）
+  const optional = await fetchOptionalFields(admin, params.id, user.id)
 
-  return NextResponse.json({ appliance: { ...rowToAppliance(data), notes } })
+  return NextResponse.json({ appliance: { ...rowToAppliance(data), ...optional } })
 }
 
 // PATCH /api/appliances/[id]
@@ -128,11 +131,14 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
   }
 
-  // notes は別クエリで更新（カラム未追加ならエラーを無視）
-  if (notes !== undefined) {
+  // notes / manual_url は別クエリで更新（カラム未追加ならエラーを無視）
+  const optionalUpdates: Record<string, unknown> = {}
+  if (notes !== undefined)      optionalUpdates.notes      = notes
+  if (manual_url !== undefined) optionalUpdates.manual_url = manual_url
+  if (Object.keys(optionalUpdates).length > 0) {
     await admin
       .from('user_products')
-      .update({ notes })
+      .update(optionalUpdates)
       .eq('id', params.id)
       .eq('user_id', user.id)
     // エラーが返っても無視（カラム未追加の場合は保存できないだけ）
@@ -150,7 +156,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (store_name          !== undefined) userProductUpdates.purchase_store     = store_name
   if (receipt_photo_url  !== undefined) userProductUpdates.receipt_photo_url  = receipt_photo_url
   if (warranty_photo_url !== undefined) userProductUpdates.warranty_photo_url = warranty_photo_url
-  if (manual_url         !== undefined) userProductUpdates.manual_url         = manual_url
 
   if ((purchase_date !== undefined || warranty_months !== undefined) && resolvedPurchaseDate) {
     const end = new Date(resolvedPurchaseDate)
@@ -166,8 +171,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       .eq('id', params.id)
       .eq('user_id', user.id)
       .single()
-    const currentNotes = await fetchNotes(admin, params.id, user.id)
-    return NextResponse.json({ appliance: { ...rowToAppliance(cur), notes: currentNotes } })
+    const currentOptional = await fetchOptionalFields(admin, params.id, user.id)
+    return NextResponse.json({ appliance: { ...rowToAppliance(cur), ...currentOptional } })
   }
 
   const { data: updated, error } = await admin
@@ -180,8 +185,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  const updatedNotes = await fetchNotes(admin, params.id, user.id)
-  return NextResponse.json({ appliance: { ...rowToAppliance(updated), notes: updatedNotes } })
+  const updatedOptional = await fetchOptionalFields(admin, params.id, user.id)
+  return NextResponse.json({ appliance: { ...rowToAppliance(updated), ...updatedOptional } })
 }
 
 // DELETE /api/appliances/[id]
