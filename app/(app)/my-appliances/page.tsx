@@ -226,12 +226,12 @@ export default function MyAppliancesPage() {
                   }}
                 >
                   <div className="appliance-card-img-wrap">
-                    <div style={{ width: 64, height: 64, background: '#F4F6F8', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                    <div style={{ width: 64, height: 64, background: 'white', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, border: '1px solid #E8ECF0' }}>
                       {item.imageUrl ? (
                         <img
                           src={item.imageUrl}
                           alt={item.name}
-                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4, boxSizing: 'border-box' }}
                           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                         />
                       ) : (

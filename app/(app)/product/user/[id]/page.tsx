@@ -394,13 +394,13 @@ export default function UserProductDetailPage({ params }: { params: { id: string
           {/* ── Product card ── */}
           {appLoading ? <ProductCardSkeleton /> : (
             <div style={{ background: 'white', border: '1px solid #E8ECF0', borderRadius: 16, padding: '20px 16px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, boxShadow: '0 1px 4px rgba(15,20,25,0.06)' }}>
-              <div style={{ width: 72, height: 72, background: '#F4F6F8', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+              <div style={{ width: 96, height: 96, background: 'white', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', border: '1px solid #E8ECF0' }}>
                 {appliance!.image_url ? (
                   <img src={appliance!.image_url} alt={appliance!.appliance_type}
-                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4, boxSizing: 'border-box' }}
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                 ) : (
-                  <ApplianceIcon type={appliance!.appliance_type} size={40} />
+                  <ApplianceIcon type={appliance!.appliance_type} size={48} />
                 )}
               </div>
               <div style={{ textAlign: 'center' }}>
