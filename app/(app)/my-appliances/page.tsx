@@ -65,7 +65,28 @@ export default function MyAppliancesPage() {
   useEffect(() => {
     fetch('/api/appliances')
       .then(r => r.json())
-      .then(d => setItems((d.appliances ?? []).map(dbToItem)))
+      .then(d => {
+        const loaded = (d.appliances ?? []).map(dbToItem)
+        setItems(loaded)
+        // 画像未設定かつ型番ありの製品は自動で写真を取得・保存
+        loaded.forEach(item => {
+          if (!item.imageUrl && item.model && item.model !== '—') {
+            fetch(`/api/product-image?model=${encodeURIComponent(item.model)}`)
+              .then(r => r.json())
+              .then(img => {
+                if (img.imageUrl) {
+                  setItems(prev => prev.map(x => x.id === item.id ? { ...x, imageUrl: img.imageUrl } : x))
+                  fetch(`/api/appliances/${item.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image_url: img.imageUrl }),
+                  }).catch(() => {})
+                }
+              })
+              .catch(() => {})
+          }
+        })
+      })
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [])
