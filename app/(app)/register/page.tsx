@@ -64,6 +64,9 @@ export default function RegisterPage() {
   const [purchaseYear, setPurchaseYear] = useState('')
   const [purchaseMonth, setPurchaseMonth] = useState('')
   const [purchaseDay, setPurchaseDay] = useState('')
+  const [warrantyEndYear, setWarrantyEndYear] = useState('')
+  const [warrantyEndMonth, setWarrantyEndMonth] = useState('')
+  const [warrantyEndDay, setWarrantyEndDay] = useState('')
   const [storeName, setStoreName] = useState('')
   const [saveError, setSaveError] = useState('')
   const [submitted, setSubmitted] = useState(false)
@@ -234,6 +237,9 @@ export default function RegisterPage() {
             ? `${purchaseYear}-${purchaseMonth.padStart(2,'0')}-${purchaseDay.padStart(2,'0')}`
             : null,
           warranty_months: 12,
+          warranty_end:    (warrantyEndYear && warrantyEndMonth && warrantyEndDay)
+            ? `${warrantyEndYear}-${warrantyEndMonth.padStart(2,'0')}-${warrantyEndDay.padStart(2,'0')}`
+            : null,
           store_name:      storeName,
           image_url:       productImageUrl,
         }),
@@ -471,6 +477,49 @@ export default function RegisterPage() {
                 {Array.from(
                   { length: (purchaseYear && purchaseMonth)
                     ? new Date(parseInt(purchaseYear), parseInt(purchaseMonth), 0).getDate()
+                    : 31
+                  },
+                  (_, i) => i + 1
+                ).map(d => (
+                  <option key={d} value={String(d)}>{d}日</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Warranty End Date — year / month / day selects */}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>保証終了日</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <select
+                value={warrantyEndYear}
+                onChange={(e) => setWarrantyEndYear(e.target.value)}
+                style={{ flex: 2, height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 10px', fontSize: 14, color: warrantyEndYear ? '#0F1419' : '#98A2AE', background: 'white', appearance: 'none' }}
+              >
+                <option value="">年</option>
+                {Array.from({ length: 20 }, (_, i) => new Date().getFullYear() - 5 + i).map(y => (
+                  <option key={y} value={String(y)}>{y}年</option>
+                ))}
+              </select>
+              <select
+                value={warrantyEndMonth}
+                onChange={(e) => setWarrantyEndMonth(e.target.value)}
+                style={{ flex: 1, height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 10px', fontSize: 14, color: warrantyEndMonth ? '#0F1419' : '#98A2AE', background: 'white', appearance: 'none' }}
+              >
+                <option value="">月</option>
+                {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                  <option key={m} value={String(m)}>{m}月</option>
+                ))}
+              </select>
+              <select
+                value={warrantyEndDay}
+                onChange={(e) => setWarrantyEndDay(e.target.value)}
+                style={{ flex: 1, height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 10px', fontSize: 14, color: warrantyEndDay ? '#0F1419' : '#98A2AE', background: 'white', appearance: 'none' }}
+              >
+                <option value="">日</option>
+                {Array.from(
+                  { length: (warrantyEndYear && warrantyEndMonth)
+                    ? new Date(parseInt(warrantyEndYear), parseInt(warrantyEndMonth), 0).getDate()
                     : 31
                   },
                   (_, i) => i + 1

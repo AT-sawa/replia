@@ -19,6 +19,7 @@ function rowToAppliance(row: any) {
     model:             product?.model_number        ?? '',
     purchase_date:     row.purchase_date            ?? null,
     warranty_months:   warrantyMonths,
+    warranty_end:      row.warranty_end             ?? null,
     store_name:        row.purchase_store           ?? '',
     image_url:         product?.image_url           ?? null,
     created_at:        row.created_at,
@@ -111,7 +112,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (ce || !current) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   const body = await req.json()
-  const { appliance_type, brand, model, purchase_date, warranty_months, store_name, image_url,
+  const { appliance_type, brand, model, purchase_date, warranty_months, warranty_end, store_name, image_url,
           receipt_photo_url, warranty_photo_url, manual_url, notes } = body
 
   // Update products master table
@@ -157,7 +158,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   if (receipt_photo_url  !== undefined) userProductUpdates.receipt_photo_url  = receipt_photo_url
   if (warranty_photo_url !== undefined) userProductUpdates.warranty_photo_url = warranty_photo_url
 
-  if ((purchase_date !== undefined || warranty_months !== undefined) && resolvedPurchaseDate) {
+  if (warranty_end !== undefined) {
+    // Direct warranty_end override
+    userProductUpdates.warranty_end = warranty_end || null
+  } else if ((purchase_date !== undefined || warranty_months !== undefined) && resolvedPurchaseDate) {
     const end = new Date(resolvedPurchaseDate)
     end.setMonth(end.getMonth() + resolvedWarrantyMonths)
     userProductUpdates.warranty_end = end.toISOString().split('T')[0]

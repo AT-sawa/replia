@@ -19,6 +19,7 @@ function rowToAppliance(row: any) {
     model:           product?.model_number        ?? '',
     purchase_date:   row.purchase_date            ?? null,
     warranty_months: warrantyMonths,
+    warranty_end:    row.warranty_end             ?? null,
     store_name:      row.purchase_store           ?? '',
     image_url:       product?.image_url           ?? null,
     created_at:      row.created_at,
@@ -74,6 +75,7 @@ export async function POST(req: NextRequest) {
     model           = '',
     purchase_date   = null,
     warranty_months = 12,
+    warranty_end    = null,
     store_name      = '',
     image_url       = null,
   } = body
@@ -128,9 +130,9 @@ export async function POST(req: NextRequest) {
     productId = newProd.id
   }
 
-  // 3. Calculate warranty_end
-  let warrantyEnd: string | null = null
-  if (purchase_date) {
+  // 3. Use direct warranty_end if provided; otherwise calculate from purchase_date + months
+  let warrantyEnd: string | null = warranty_end || null
+  if (!warrantyEnd && purchase_date) {
     const end = new Date(purchase_date)
     end.setMonth(end.getMonth() + warranty_months)
     warrantyEnd = end.toISOString().split('T')[0]

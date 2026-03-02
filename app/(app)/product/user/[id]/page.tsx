@@ -15,6 +15,7 @@ interface Appliance {
   model: string
   purchase_date: string | null
   warranty_months: number
+  warranty_end: string | null
   store_name: string
   image_url: string | null
   created_at: string
@@ -130,15 +131,16 @@ export default function UserProductDetailPage({ params }: { params: { id: string
   const [savingNotes, setSavingNotes] = useState(false)
 
   // Documents section
-  const [docEditMode, setDocEditMode] = useState(false)
   const [manualUrl, setManualUrl] = useState('')
+  const [manualEditMode, setManualEditMode] = useState(false)
+  const [manualSearching, setManualSearching] = useState(false)
   const [receiptUrl, setReceiptUrl] = useState<string | null>(null)
   const [warrantyDocUrl, setWarrantyDocUrl] = useState<string | null>(null)
-  const [receiptFile, setReceiptFile] = useState<File | null>(null)
-  const [warrantyDocFile, setWarrantyDocFile] = useState<File | null>(null)
-  const [savingDocs, setSavingDocs] = useState(false)
+  const [uploadingReceipt, setUploadingReceipt] = useState(false)
+  const [uploadingWarrantyDoc, setUploadingWarrantyDoc] = useState(false)
   const receiptFileRef = useRef<HTMLInputElement>(null)
   const warrantyDocFileRef = useRef<HTMLInputElement>(null)
+  const manualFetchedRef = useRef(false)
 
   // Reminders
   const [reminders, setReminders] = useState<Reminder[]>([])
@@ -157,7 +159,6 @@ export default function UserProductDetailPage({ params }: { params: { id: string
   const [savingHistory, setSavingHistory] = useState(false)
 
   // Accordion open/close (default: all closed)
-  const [showInfo, setShowInfo] = useState(true)
   const [showMemo, setShowMemo] = useState(false)
   const [showMaintenance, setShowMaintenance] = useState(false)
   const [showHistory, setShowHistory] = useState(false)
@@ -171,11 +172,31 @@ export default function UserProductDetailPage({ params }: { params: { id: string
       })
       .then(d => {
         if (!d) return
-        setAppliance(d.appliance)
-        setNotes(d.appliance.notes || '')
-        setManualUrl(d.appliance.manual_url || '')
-        setReceiptUrl(d.appliance.receipt_photo_url || null)
-        setWarrantyDocUrl(d.appliance.warranty_photo_url || null)
+        const a = d.appliance
+        setAppliance(a)
+        setNotes(a.notes || '')
+        setManualUrl(a.manual_url || '')
+        setReceiptUrl(a.receipt_photo_url || null)
+        setWarrantyDocUrl(a.warranty_photo_url || null)
+        // Auto-fetch manual URL if not registered and model number is available
+        if (!a.manual_url && a.model && a.model !== '—' && !manualFetchedRef.current) {
+          manualFetchedRef.current = true
+          setManualSearching(true)
+          fetch(`/api/product-manual?model=${encodeURIComponent(a.model)}`)
+            .then(r => r.json())
+            .then(md => {
+              if (md.manualUrl) {
+                setManualUrl(md.manualUrl)
+                fetch(`/api/appliances/${params.id}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ manual_url: md.manualUrl }),
+                }).catch(() => {})
+              }
+            })
+            .catch(() => {})
+            .finally(() => setManualSearching(false))
+        }
       })
       .finally(() => setAppLoading(false))
 
@@ -206,38 +227,49 @@ export default function UserProductDetailPage({ params }: { params: { id: string
     setSavingNotes(false)
   }
 
-  const handleSaveDocs = async () => {
-    setSavingDocs(true)
-    let newReceiptUrl = receiptUrl
-    let newWarrantyDocUrl = warrantyDocUrl
-
-    if (receiptFile) {
-      const ext = receiptFile.name.split('.').pop() ?? 'jpg'
-      const url = await uploadToStorage(receiptFile, `receipts/${params.id}-receipt-${Date.now()}.${ext}`)
-      if (url) newReceiptUrl = url
-    }
-    if (warrantyDocFile) {
-      const ext = warrantyDocFile.name.split('.').pop() ?? 'jpg'
-      const url = await uploadToStorage(warrantyDocFile, `receipts/${params.id}-warranty-${Date.now()}.${ext}`)
-      if (url) newWarrantyDocUrl = url
-    }
-
+  const handleSaveManual = async () => {
     await fetch(`/api/appliances/${params.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        manual_url: manualUrl || null,
-        receipt_photo_url: newReceiptUrl,
-        warranty_photo_url: newWarrantyDocUrl,
-      }),
+      body: JSON.stringify({ manual_url: manualUrl || null }),
     })
+    setManualEditMode(false)
+  }
 
-    setReceiptUrl(newReceiptUrl)
-    setWarrantyDocUrl(newWarrantyDocUrl)
-    setReceiptFile(null)
-    setWarrantyDocFile(null)
-    setDocEditMode(false)
-    setSavingDocs(false)
+  const handleReceiptFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingReceipt(true)
+    const ext = file.name.split('.').pop() ?? 'jpg'
+    const url = await uploadToStorage(file, `receipts/${params.id}-receipt-${Date.now()}.${ext}`)
+    if (url) {
+      setReceiptUrl(url)
+      fetch(`/api/appliances/${params.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ receipt_photo_url: url }),
+      }).catch(() => {})
+    }
+    setUploadingReceipt(false)
+    e.target.value = ''
+  }
+
+  const handleWarrantyDocFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setUploadingWarrantyDoc(true)
+    const ext = file.name.split('.').pop() ?? 'jpg'
+    const url = await uploadToStorage(file, `receipts/${params.id}-warranty-${Date.now()}.${ext}`)
+    if (url) {
+      setWarrantyDocUrl(url)
+      fetch(`/api/appliances/${params.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ warranty_photo_url: url }),
+      }).catch(() => {})
+    }
+    setUploadingWarrantyDoc(false)
+    e.target.value = ''
   }
 
   const handleAddReminder = async () => {
@@ -397,117 +429,128 @@ export default function UserProductDetailPage({ params }: { params: { id: string
             </div>
           )}
 
-          {/* ── 製品情報（accordion） ── */}
+          {/* ── 製品情報（常時表示・編集ボタンあり） ── */}
           {appLoading ? <SectionSkeleton rows={4} /> : (
             <div style={{ background: 'white', border: '1px solid #E8ECF0', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,20,25,0.06)' }}>
-              <div onClick={() => setShowInfo(v => !v)} style={{ padding: '12px 16px', borderBottom: showInfo ? '1px solid #E8ECF0' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid #E8ECF0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <p style={{ fontSize: 12, fontWeight: 700, color: '#5B6570', margin: 0 }}>製品情報</p>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ transition: 'transform 0.2s', transform: showInfo ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}>
-                  <path d="M4 6L8 10L12 6" stroke="#98A2AE" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <Link href={`/product/user/${params.id}/edit`}
+                  style={{ fontSize: 11, color: '#2563EB', fontWeight: 600, textDecoration: 'none' }}>
+                  ✎ 編集
+                </Link>
               </div>
-              {showInfo && (
-                [
-                  { label: '製品の種類', value: appliance!.appliance_type },
-                  appliance!.brand      ? { label: 'ブランド',   value: appliance!.brand }      : null,
-                  appliance!.model      ? { label: 'モデル番号', value: appliance!.model }      : null,
-                  purchaseDateStr       ? { label: '購入日',     value: purchaseDateStr }       : null,
-                  appliance!.store_name ? { label: '購入店舗',   value: appliance!.store_name } : null,
-                  warrantyEndStr        ? { label: '保証終了日', value: warrantyEndStr }        : null,
-                ]
-                  .filter(Boolean)
-                  .map((row, i, arr) => (
-                    <div key={row!.label} style={{ display: 'flex', padding: '11px 16px', borderBottom: i < arr.length - 1 ? '1px solid #E8ECF0' : 'none' }}>
-                      <span style={{ fontSize: 12, color: '#98A2AE', flex: '0 0 90px' }}>{row!.label}</span>
-                      <span style={{ fontSize: 12, fontWeight: 500, color: '#0F1419', wordBreak: 'break-all' }}>{row!.value}</span>
-                    </div>
-                  ))
-              )}
+              {[
+                { label: '製品の種類', value: appliance!.appliance_type },
+                appliance!.brand      ? { label: 'ブランド',   value: appliance!.brand }      : null,
+                appliance!.model      ? { label: 'モデル番号', value: appliance!.model }      : null,
+                purchaseDateStr       ? { label: '購入日',     value: purchaseDateStr }       : null,
+                appliance!.store_name ? { label: '購入店舗',   value: appliance!.store_name } : null,
+                warrantyEndStr        ? { label: '保証終了日', value: warrantyEndStr }        : null,
+              ]
+                .filter(Boolean)
+                .map((row, i, arr) => (
+                  <div key={row!.label} style={{ display: 'flex', padding: '11px 16px', borderBottom: i < arr.length - 1 ? '1px solid #E8ECF0' : 'none' }}>
+                    <span style={{ fontSize: 12, color: '#98A2AE', flex: '0 0 90px' }}>{row!.label}</span>
+                    <span style={{ fontSize: 12, fontWeight: 500, color: '#0F1419', wordBreak: 'break-all' }}>{row!.value}</span>
+                  </div>
+                ))
+              }
             </div>
           )}
 
-          {/* ── 書類・マニュアル（常時表示・編集ボタンあり） ── */}
+          {/* ── 書類・マニュアル（各項目に追加/変更ボタン） ── */}
           {!appLoading && (
             <div style={{ background: 'white', border: '1px solid #E8ECF0', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,20,25,0.06)' }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid #E8ECF0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid #E8ECF0', display: 'flex', alignItems: 'center', gap: 8 }}>
                 <p style={{ fontSize: 12, fontWeight: 700, color: '#5B6570', margin: 0 }}>書類・マニュアル</p>
-                <button
-                  onClick={() => setDocEditMode(v => !v)}
-                  style={{ fontSize: 11, color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}
-                >
-                  {docEditMode ? '閉じる' : '✎ 編集'}
-                </button>
+                {manualSearching && (
+                  <span style={{ fontSize: 11, color: '#98A2AE' }}>検索中...</span>
+                )}
               </div>
-              {docEditMode ? (
-                <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <div>
-                    <label style={{ fontSize: 11, color: '#5B6570', fontWeight: 600, display: 'block', marginBottom: 4 }}>取扱説明書URL</label>
-                    <input
-                      type="url"
-                      value={manualUrl}
-                      onChange={e => setManualUrl(e.target.value)}
-                      placeholder="https://panasonic.net/..."
-                      style={{ width: '100%', height: 40, border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '0 12px', fontSize: 13, boxSizing: 'border-box' }}
-                    />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 11, color: '#5B6570', fontWeight: 600, display: 'block', marginBottom: 4 }}>領収書・レシート</label>
-                    <input ref={receiptFileRef} type="file" accept="image/*,application/pdf" style={{ display: 'none' }}
-                      onChange={e => { const f = e.target.files?.[0]; if (f) setReceiptFile(f) }} />
-                    <div onClick={() => receiptFileRef.current?.click()}
-                      style={{ border: `1.5px dashed ${receiptFile || receiptUrl ? '#86EFAC' : '#E8ECF0'}`, borderRadius: 8, padding: '10px 12px', cursor: 'pointer', background: receiptFile || receiptUrl ? '#F0FDF4' : 'white', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 16 }}>🧾</span>
-                      <span style={{ fontSize: 12, color: receiptFile || receiptUrl ? '#059669' : '#98A2AE' }}>
-                        {receiptFile ? `✓ ${receiptFile.name}` : receiptUrl ? '✓ 登録済み（タップで変更）' : '写真をタップして追加'}
-                      </span>
-                    </div>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 11, color: '#5B6570', fontWeight: 600, display: 'block', marginBottom: 4 }}>保証書</label>
-                    <input ref={warrantyDocFileRef} type="file" accept="image/*,application/pdf" style={{ display: 'none' }}
-                      onChange={e => { const f = e.target.files?.[0]; if (f) setWarrantyDocFile(f) }} />
-                    <div onClick={() => warrantyDocFileRef.current?.click()}
-                      style={{ border: `1.5px dashed ${warrantyDocFile || warrantyDocUrl ? '#86EFAC' : '#E8ECF0'}`, borderRadius: 8, padding: '10px 12px', cursor: 'pointer', background: warrantyDocFile || warrantyDocUrl ? '#F0FDF4' : 'white', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 16 }}>📋</span>
-                      <span style={{ fontSize: 12, color: warrantyDocFile || warrantyDocUrl ? '#059669' : '#98A2AE' }}>
-                        {warrantyDocFile ? `✓ ${warrantyDocFile.name}` : warrantyDocUrl ? '✓ 登録済み（タップで変更）' : '写真をタップして追加'}
-                      </span>
-                    </div>
-                  </div>
-                  <button onClick={handleSaveDocs} disabled={savingDocs}
-                    style={{ height: 38, background: '#0F1419', color: 'white', border: 'none', borderRadius: 100, fontSize: 13, fontWeight: 700, cursor: savingDocs ? 'not-allowed' : 'pointer', opacity: savingDocs ? 0.7 : 1 }}>
-                    {savingDocs ? '保存中...' : '保存する'}
-                  </button>
-                </div>
-              ) : (
-                <div>
-                  {manualUrl ? (
+
+              {/* 取扱説明書 */}
+              <div style={{ borderBottom: '1px solid #F4F6F8' }}>
+                <div style={{ display: 'flex', padding: '11px 16px', gap: 10, alignItems: 'center' }}>
+                  <span style={{ fontSize: 16 }}>📖</span>
+                  {manualUrl && !manualEditMode ? (
                     <a href={manualUrl} target="_blank" rel="noopener noreferrer"
-                      style={{ display: 'flex', padding: '11px 16px', gap: 10, textDecoration: 'none', borderBottom: '1px solid #F4F6F8', alignItems: 'center' }}>
-                      <span style={{ fontSize: 16 }}>📖</span>
-                      <span style={{ fontSize: 12, fontWeight: 500, color: '#2563EB', flex: 1 }}>取扱説明書を開く</span>
-                      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 10L10 2M10 2H4M10 2V8" stroke="#2563EB" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                      style={{ fontSize: 12, fontWeight: 500, color: '#2563EB', flex: 1, textDecoration: 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      取扱説明書を開く
                     </a>
-                  ) : (
-                    <div style={{ display: 'flex', padding: '11px 16px', gap: 10, alignItems: 'center', borderBottom: '1px solid #F4F6F8' }}>
-                      <span style={{ fontSize: 16 }}>📖</span>
-                      <span style={{ fontSize: 12, color: '#C5CAD0' }}>取扱説明書（未登録）</span>
-                    </div>
+                  ) : !manualEditMode ? (
+                    <span style={{ fontSize: 12, color: '#C5CAD0', flex: 1 }}>取扱説明書（未登録）</span>
+                  ) : <div style={{ flex: 1 }} />}
+                  {!manualEditMode && (
+                    <button onClick={() => setManualEditMode(true)}
+                      style={{ flexShrink: 0, height: 28, padding: '0 10px', fontSize: 11, fontWeight: 600, borderRadius: 100, cursor: 'pointer', border: manualUrl ? '1px solid #E8ECF0' : 'none', background: manualUrl ? 'white' : 'transparent', color: manualUrl ? '#5B6570' : '#2563EB' }}>
+                      {manualUrl ? '変更' : '＋ 追加'}
+                    </button>
                   )}
-                  <div style={{ display: 'flex', padding: '11px 16px', gap: 10, alignItems: 'center', borderBottom: '1px solid #F4F6F8' }}>
-                    <span style={{ fontSize: 16 }}>🧾</span>
-                    {receiptUrl
-                      ? <a href={receiptUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, fontWeight: 500, color: '#2563EB', textDecoration: 'none' }}>領収書・レシートを開く</a>
-                      : <span style={{ fontSize: 12, color: '#C5CAD0' }}>領収書・レシート（未登録）</span>}
-                  </div>
-                  <div style={{ display: 'flex', padding: '11px 16px', gap: 10, alignItems: 'center' }}>
-                    <span style={{ fontSize: 16 }}>📋</span>
-                    {warrantyDocUrl
-                      ? <a href={warrantyDocUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, fontWeight: 500, color: '#2563EB', textDecoration: 'none' }}>保証書を開く</a>
-                      : <span style={{ fontSize: 12, color: '#C5CAD0' }}>保証書（未登録）</span>}
-                  </div>
                 </div>
-              )}
+                {manualEditMode && (
+                  <div style={{ padding: '0 16px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <input type="url" value={manualUrl} onChange={e => setManualUrl(e.target.value)}
+                      placeholder="https://panasonic.net/..."
+                      style={{ width: '100%', height: 38, border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '0 10px', fontSize: 12, boxSizing: 'border-box' }} />
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button onClick={() => setManualEditMode(false)}
+                        style={{ flex: 1, height: 32, border: '1px solid #E8ECF0', borderRadius: 100, background: 'white', color: '#5B6570', fontSize: 11, cursor: 'pointer' }}>
+                        キャンセル
+                      </button>
+                      <button onClick={handleSaveManual}
+                        style={{ flex: 2, height: 32, border: 'none', borderRadius: 100, background: '#0F1419', color: 'white', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                        保存
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 領収書・レシート */}
+              <input ref={receiptFileRef} type="file" accept="image/*,application/pdf" style={{ display: 'none' }}
+                onChange={handleReceiptFileChange} />
+              <div style={{ display: 'flex', padding: '11px 16px', gap: 10, alignItems: 'center', borderBottom: '1px solid #F4F6F8' }}>
+                <span style={{ fontSize: 16 }}>🧾</span>
+                {uploadingReceipt ? (
+                  <span style={{ fontSize: 12, color: '#98A2AE', flex: 1 }}>アップロード中...</span>
+                ) : receiptUrl ? (
+                  <a href={receiptUrl} target="_blank" rel="noopener noreferrer"
+                    style={{ fontSize: 12, fontWeight: 500, color: '#2563EB', flex: 1, textDecoration: 'none' }}>
+                    領収書・レシートを開く
+                  </a>
+                ) : (
+                  <span style={{ fontSize: 12, color: '#C5CAD0', flex: 1 }}>領収書・レシート（未登録）</span>
+                )}
+                {!uploadingReceipt && (
+                  <button onClick={() => receiptFileRef.current?.click()}
+                    style={{ flexShrink: 0, height: 28, padding: '0 10px', fontSize: 11, fontWeight: 600, borderRadius: 100, cursor: 'pointer', border: receiptUrl ? '1px solid #E8ECF0' : 'none', background: receiptUrl ? 'white' : 'transparent', color: receiptUrl ? '#5B6570' : '#2563EB' }}>
+                    {receiptUrl ? '変更' : '＋ 追加'}
+                  </button>
+                )}
+              </div>
+
+              {/* 保証書 */}
+              <input ref={warrantyDocFileRef} type="file" accept="image/*,application/pdf" style={{ display: 'none' }}
+                onChange={handleWarrantyDocFileChange} />
+              <div style={{ display: 'flex', padding: '11px 16px', gap: 10, alignItems: 'center' }}>
+                <span style={{ fontSize: 16 }}>📋</span>
+                {uploadingWarrantyDoc ? (
+                  <span style={{ fontSize: 12, color: '#98A2AE', flex: 1 }}>アップロード中...</span>
+                ) : warrantyDocUrl ? (
+                  <a href={warrantyDocUrl} target="_blank" rel="noopener noreferrer"
+                    style={{ fontSize: 12, fontWeight: 500, color: '#2563EB', flex: 1, textDecoration: 'none' }}>
+                    保証書を開く
+                  </a>
+                ) : (
+                  <span style={{ fontSize: 12, color: '#C5CAD0', flex: 1 }}>保証書（未登録）</span>
+                )}
+                {!uploadingWarrantyDoc && (
+                  <button onClick={() => warrantyDocFileRef.current?.click()}
+                    style={{ flexShrink: 0, height: 28, padding: '0 10px', fontSize: 11, fontWeight: 600, borderRadius: 100, cursor: 'pointer', border: warrantyDocUrl ? '1px solid #E8ECF0' : 'none', background: warrantyDocUrl ? 'white' : 'transparent', color: warrantyDocUrl ? '#5B6570' : '#2563EB' }}>
+                    {warrantyDocUrl ? '変更' : '＋ 追加'}
+                  </button>
+                )}
+              </div>
             </div>
           )}
 

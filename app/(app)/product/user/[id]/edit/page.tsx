@@ -86,6 +86,9 @@ export default function EditAppliancePage({ params }: { params: { id: string } }
   const [purchaseMonth, setPurchaseMonth] = useState('')
   const [purchaseDay, setPurchaseDay] = useState('')
   const [warrantyMonths, setWarrantyMonths] = useState('')
+  const [warrantyEndYear, setWarrantyEndYear] = useState('')
+  const [warrantyEndMonth, setWarrantyEndMonth] = useState('')
+  const [warrantyEndDay, setWarrantyEndDay] = useState('')
   const [storeName, setStoreName] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -121,6 +124,12 @@ export default function EditAppliancePage({ params }: { params: { id: string } }
           setPurchaseDay(day ? String(parseInt(day)) : '')
         }
         setWarrantyMonths(a.warranty_months ? String(a.warranty_months) : '')
+        if (a.warranty_end) {
+          const [ey, em, ed] = a.warranty_end.split('-')
+          setWarrantyEndYear(ey || '')
+          setWarrantyEndMonth(em ? String(parseInt(em)) : '')
+          setWarrantyEndDay(ed ? String(parseInt(ed)) : '')
+        }
         setStoreName(a.store_name || '')
       })
       .finally(() => setLoading(false))
@@ -188,6 +197,9 @@ export default function EditAppliancePage({ params }: { params: { id: string } }
         image_url: imageUrl ?? productImageUrl ?? null,
       }
       if (warrantyMonths) body.warranty_months = parseInt(warrantyMonths)
+      if (warrantyEndYear && warrantyEndMonth && warrantyEndDay) {
+        body.warranty_end = `${warrantyEndYear}-${warrantyEndMonth.padStart(2, '0')}-${warrantyEndDay.padStart(2, '0')}`
+      }
 
       const res = await fetch(`/api/appliances/${params.id}`, {
         method: 'PATCH',
@@ -379,6 +391,49 @@ export default function EditAppliancePage({ params }: { params: { id: string } }
               </option>
             ))}
           </select>
+        </div>
+
+        {/* Warranty End Date */}
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>保証終了日</label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <select
+              value={warrantyEndYear}
+              onChange={e => setWarrantyEndYear(e.target.value)}
+              style={{ ...selectStyle, flex: 2, color: warrantyEndYear ? '#0F1419' : '#98A2AE' }}
+            >
+              <option value="">年</option>
+              {Array.from({ length: 20 }, (_, i) => new Date().getFullYear() - 5 + i).map(y => (
+                <option key={y} value={String(y)}>{y}年</option>
+              ))}
+            </select>
+            <select
+              value={warrantyEndMonth}
+              onChange={e => setWarrantyEndMonth(e.target.value)}
+              style={{ ...selectStyle, flex: 1, color: warrantyEndMonth ? '#0F1419' : '#98A2AE' }}
+            >
+              <option value="">月</option>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                <option key={m} value={String(m)}>{m}月</option>
+              ))}
+            </select>
+            <select
+              value={warrantyEndDay}
+              onChange={e => setWarrantyEndDay(e.target.value)}
+              style={{ ...selectStyle, flex: 1, color: warrantyEndDay ? '#0F1419' : '#98A2AE' }}
+            >
+              <option value="">日</option>
+              {Array.from(
+                { length: (warrantyEndYear && warrantyEndMonth)
+                  ? new Date(parseInt(warrantyEndYear), parseInt(warrantyEndMonth), 0).getDate()
+                  : 31
+                },
+                (_, i) => i + 1
+              ).map(d => (
+                <option key={d} value={String(d)}>{d}日</option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Store */}
