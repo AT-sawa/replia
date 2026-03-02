@@ -6,7 +6,7 @@ import Badge, { WarrantyStatus } from '@/components/ui/Badge'
 import { ApplianceIcon } from '@/components/ui/ApplianceIcon'
 import { formatDaysRemaining } from '@/lib/utils'
 
-type SortKey = 'registered' | 'purchase' | 'warranty'
+type SortKey = 'registered' | 'purchase' | 'warranty' | 'name'
 
 interface ApplianceItem {
   id: string
@@ -35,12 +35,15 @@ function dbToItem(a: any): ApplianceItem {
   const warrantyMs = (a.warranty_months ?? 12) * 30 * 24 * 60 * 60 * 1000
   const warrantyEndMs = purchaseDateMs + warrantyMs
   const daysLeft = Math.round((warrantyEndMs - Date.now()) / 86400000)
+  const applianceType = a.appliance_type || 'その他'
+  const model = a.model || ''
+  const displayName = model ? `${applianceType}・${model}` : applianceType
   return {
     id:             a.id,
-    name:           a.appliance_type || 'その他',
-    model:          a.model || '—',
+    name:           displayName,
+    model:          model || '—',
     brand:          a.brand || '',
-    category:       a.appliance_type || 'その他',
+    category:       applianceType,
     status:         calcStatus(daysLeft),
     daysLeft:       Math.max(0, daysLeft),
     purchaseDateMs,
@@ -52,6 +55,7 @@ function dbToItem(a: any): ApplianceItem {
 
 const sortOptions: { key: SortKey; label: string }[] = [
   { key: 'registered', label: '登録順' },
+  { key: 'name',       label: '名前順' },
   { key: 'purchase',   label: '購入日順' },
   { key: 'warranty',   label: '保証期限順' },
 ]
@@ -101,7 +105,9 @@ export default function MyAppliancesPage() {
       ? [...items]
       : items.filter(a => a.category === selectedCategory)
 
-    if (sortKey === 'purchase') {
+    if (sortKey === 'name') {
+      list = [...list].sort((a, b) => a.name.localeCompare(b.name, 'ja'))
+    } else if (sortKey === 'purchase') {
       list = [...list].sort((a, b) => b.purchaseDateMs - a.purchaseDateMs)
     } else if (sortKey === 'warranty') {
       list = [...list].sort((a, b) => {
@@ -220,7 +226,7 @@ export default function MyAppliancesPage() {
                   }}
                 >
                   <div className="appliance-card-img-wrap">
-                    <div style={{ width: 44, height: 44, background: '#F4F6F8', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                    <div style={{ width: 64, height: 64, background: '#F4F6F8', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                       {item.imageUrl ? (
                         <img
                           src={item.imageUrl}
@@ -229,7 +235,7 @@ export default function MyAppliancesPage() {
                           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
                         />
                       ) : (
-                        <ApplianceIcon type={item.name} size={24} />
+                        <ApplianceIcon type={item.category} size={32} />
                       )}
                     </div>
                   </div>
@@ -237,9 +243,11 @@ export default function MyAppliancesPage() {
                     <p className="appliance-card-name" style={{ fontSize: 14, fontWeight: 700, color: '#0F1419', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {item.name}
                     </p>
-                    <p style={{ fontSize: 11, color: '#98A2AE', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {[item.model, item.brand].filter(Boolean).join(' · ')}
-                    </p>
+                    {item.brand && (
+                      <p style={{ fontSize: 11, color: '#98A2AE', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {item.brand}
+                      </p>
+                    )}
                   </div>
                   <div className="appliance-card-meta" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
                     <Badge status={item.status} />
