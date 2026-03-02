@@ -156,6 +156,12 @@ export default function UserProductDetailPage({ params }: { params: { id: string
   const [newStatus, setNewStatus] = useState('対応中')
   const [savingHistory, setSavingHistory] = useState(false)
 
+  // Accordion open/close (default: all closed)
+  const [showInfo, setShowInfo] = useState(false)
+  const [showMemo, setShowMemo] = useState(false)
+  const [showMaintenance, setShowMaintenance] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
+
   useEffect(() => {
     // Appliance (main — blocks skeleton)
     fetch(`/api/appliances/${params.id}`)
@@ -391,72 +397,36 @@ export default function UserProductDetailPage({ params }: { params: { id: string
             </div>
           )}
 
-          {/* ── Product info ── */}
+          {/* ── 製品情報（accordion） ── */}
           {appLoading ? <SectionSkeleton rows={4} /> : (
             <div style={{ background: 'white', border: '1px solid #E8ECF0', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,20,25,0.06)' }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid #E8ECF0' }}>
+              <div onClick={() => setShowInfo(v => !v)} style={{ padding: '12px 16px', borderBottom: showInfo ? '1px solid #E8ECF0' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
                 <p style={{ fontSize: 12, fontWeight: 700, color: '#5B6570', margin: 0 }}>製品情報</p>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ transition: 'transform 0.2s', transform: showInfo ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}>
+                  <path d="M4 6L8 10L12 6" stroke="#98A2AE" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
-              {[
-                { label: '製品の種類', value: appliance!.appliance_type },
-                appliance!.brand      ? { label: 'ブランド',   value: appliance!.brand }      : null,
-                appliance!.model      ? { label: 'モデル番号', value: appliance!.model }      : null,
-                purchaseDateStr       ? { label: '購入日',     value: purchaseDateStr }       : null,
-                appliance!.store_name ? { label: '購入店舗',   value: appliance!.store_name } : null,
-                warrantyEndStr        ? { label: '保証終了日', value: warrantyEndStr }        : null,
-              ]
-                .filter(Boolean)
-                .map((row, i, arr) => (
-                  <div key={row!.label} style={{ display: 'flex', padding: '11px 16px', borderBottom: i < arr.length - 1 ? '1px solid #E8ECF0' : 'none' }}>
-                    <span style={{ fontSize: 12, color: '#98A2AE', flex: '0 0 90px' }}>{row!.label}</span>
-                    <span style={{ fontSize: 12, fontWeight: 500, color: '#0F1419', wordBreak: 'break-all' }}>{row!.value}</span>
-                  </div>
-                ))}
-            </div>
-          )}
-
-          {/* ── Memo section ── */}
-          {!appLoading && (
-            <div style={{ background: 'white', border: '1px solid #E8ECF0', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,20,25,0.06)' }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid #E8ECF0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <p style={{ fontSize: 12, fontWeight: 700, color: '#5B6570', margin: 0 }}>メモ</p>
-                <button
-                  onClick={() => { if (notesEditMode) { setNotes(appliance?.notes || '') } setNotesEditMode(v => !v) }}
-                  style={{ fontSize: 11, color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}
-                >
-                  {notesEditMode ? 'キャンセル' : '✎ 編集'}
-                </button>
-              </div>
-              {notesEditMode ? (
-                <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <textarea
-                    value={notes}
-                    onChange={e => setNotes(e.target.value)}
-                    placeholder="この製品に関するメモを自由に書けます（購入経緯、設置場所、カスタマイズ内容など）"
-                    rows={5}
-                    style={{ width: '100%', border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '10px 12px', fontSize: 13, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', lineHeight: 1.6 }}
-                  />
-                  <button
-                    onClick={handleSaveNotes}
-                    disabled={savingNotes}
-                    style={{ height: 38, background: '#0F1419', color: 'white', border: 'none', borderRadius: 100, fontSize: 13, fontWeight: 700, cursor: savingNotes ? 'not-allowed' : 'pointer', opacity: savingNotes ? 0.7 : 1 }}
-                  >
-                    {savingNotes ? '保存中...' : '保存する'}
-                  </button>
-                </div>
-              ) : (
-                <div style={{ padding: '12px 16px' }}>
-                  {notes ? (
-                    <p style={{ fontSize: 13, color: '#0F1419', margin: 0, lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{notes}</p>
-                  ) : (
-                    <p style={{ fontSize: 12, color: '#C5CAD0', margin: 0 }}>メモはありません。「✎ 編集」から追加できます。</p>
-                  )}
-                </div>
+              {showInfo && (
+                [
+                  { label: '製品の種類', value: appliance!.appliance_type },
+                  appliance!.brand      ? { label: 'ブランド',   value: appliance!.brand }      : null,
+                  appliance!.model      ? { label: 'モデル番号', value: appliance!.model }      : null,
+                  purchaseDateStr       ? { label: '購入日',     value: purchaseDateStr }       : null,
+                  appliance!.store_name ? { label: '購入店舗',   value: appliance!.store_name } : null,
+                  warrantyEndStr        ? { label: '保証終了日', value: warrantyEndStr }        : null,
+                ]
+                  .filter(Boolean)
+                  .map((row, i, arr) => (
+                    <div key={row!.label} style={{ display: 'flex', padding: '11px 16px', borderBottom: i < arr.length - 1 ? '1px solid #E8ECF0' : 'none' }}>
+                      <span style={{ fontSize: 12, color: '#98A2AE', flex: '0 0 90px' }}>{row!.label}</span>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: '#0F1419', wordBreak: 'break-all' }}>{row!.value}</span>
+                    </div>
+                  ))
               )}
             </div>
           )}
 
-          {/* ── Documents section ── */}
+          {/* ── 書類・マニュアル（常時表示・編集ボタンあり） ── */}
           {!appLoading && (
             <div style={{ background: 'white', border: '1px solid #E8ECF0', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,20,25,0.06)' }}>
               <div style={{ padding: '12px 16px', borderBottom: '1px solid #E8ECF0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -468,7 +438,6 @@ export default function UserProductDetailPage({ params }: { params: { id: string
                   {docEditMode ? '閉じる' : '✎ 編集'}
                 </button>
               </div>
-
               {docEditMode ? (
                 <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
                   <div>
@@ -542,24 +511,10 @@ export default function UserProductDetailPage({ params }: { params: { id: string
             </div>
           )}
 
-          {/* ── Edit button ── */}
-          {!appLoading && (
-            <Link
-              href={`/product/user/${params.id}/edit`}
-              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'white', color: '#0F1419', border: '1.5px solid #E8ECF0', borderRadius: 100, height: 46, fontSize: 14, fontWeight: 600, textDecoration: 'none' }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M11 4H4C2.9 4 2 4.9 2 6v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-7" stroke="#0F1419" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5Z" stroke="#0F1419" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              編集する
-            </Link>
-          )}
-
-          {/* ── Maintenance Reminders ── */}
+          {/* ── メンテナンス（accordion） ── */}
           {!appLoading && (
             <div style={{ background: 'white', border: '1px solid #E8ECF0', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,20,25,0.06)' }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid #E8ECF0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div onClick={() => setShowMaintenance(v => !v)} style={{ padding: '12px 16px', borderBottom: showMaintenance ? '1px solid #E8ECF0' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <p style={{ fontSize: 12, fontWeight: 700, color: '#5B6570', margin: 0 }}>メンテナンス</p>
                   {overdueSoon > 0 && (
@@ -568,139 +523,207 @@ export default function UserProductDetailPage({ params }: { params: { id: string
                     </span>
                   )}
                 </div>
-                <button onClick={() => setShowAddReminder(v => !v)}
-                  style={{ fontSize: 11, color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>
-                  {showAddReminder ? '閉じる' : '+ 追加'}
-                </button>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ transition: 'transform 0.2s', transform: showMaintenance ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}>
+                  <path d="M4 6L8 10L12 6" stroke="#98A2AE" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
-
-              {showAddReminder && (
-                <div style={{ padding: '12px 16px', borderBottom: '1px solid #E8ECF0', background: '#FAFBFC', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <input
-                    placeholder="メンテナンス名（例：エアコンフィルター掃除）"
-                    value={newReminderTitle}
-                    onChange={e => setNewReminderTitle(e.target.value)}
-                    style={{ height: 40, border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '0 12px', fontSize: 13, boxSizing: 'border-box', width: '100%', fontFamily: 'inherit' }}
-                  />
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <div style={{ flex: 1 }}>
-                      <label style={{ fontSize: 11, color: '#5B6570', display: 'block', marginBottom: 3 }}>繰り返し</label>
-                      <select value={newReminderInterval} onChange={e => setNewReminderInterval(e.target.value)}
-                        style={{ width: '100%', height: 38, border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '0 8px', fontSize: 13, background: 'white' }}>
-                        {([['1','毎月'],['2','2ヶ月'],['3','3ヶ月'],['6','6ヶ月'],['12','1年'],['24','2年']] as [string,string][]).map(([v, l]) => (
-                          <option key={v} value={v}>{l}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <label style={{ fontSize: 11, color: '#5B6570', display: 'block', marginBottom: 3 }}>最後に実施した日</label>
-                      <input type="date" value={newReminderLastDone} onChange={e => setNewReminderLastDone(e.target.value)}
-                        style={{ width: '100%', height: 38, border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '0 8px', fontSize: 13, boxSizing: 'border-box' }} />
-                    </div>
-                  </div>
-                  <button onClick={handleAddReminder}
-                    disabled={savingReminder || !newReminderTitle.trim()}
-                    style={{ height: 38, background: '#0F1419', color: 'white', border: 'none', borderRadius: 100, fontSize: 13, fontWeight: 700, cursor: (savingReminder || !newReminderTitle.trim()) ? 'not-allowed' : 'pointer', opacity: (savingReminder || !newReminderTitle.trim()) ? 0.5 : 1 }}>
-                    {savingReminder ? '保存中...' : '追加する'}
-                  </button>
-                </div>
-              )}
-
-              {reminders.length === 0 && !showAddReminder && (
-                <p style={{ fontSize: 12, color: '#98A2AE', textAlign: 'center', padding: '20px 16px', margin: 0 }}>まだリマインダーはありません</p>
-              )}
-              {reminders.map((r, i) => {
-                const dueStatus = getDueStatus(r.next_due_date)
-                return (
-                  <div key={r.id} style={{ padding: '12px 16px', borderBottom: i < reminders.length - 1 ? '1px solid #F4F6F8' : 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2, flexWrap: 'wrap' }}>
-                        <p style={{ fontSize: 13, fontWeight: 500, color: r.enabled ? '#0F1419' : '#98A2AE', margin: 0 }}>{r.title}</p>
-                        {r.enabled && dueStatus === 'overdue' && (
-                          <span style={{ fontSize: 10, fontWeight: 700, background: '#FEE2E2', color: '#DC2626', padding: '1px 6px', borderRadius: 100 }}>期限切れ</span>
-                        )}
-                        {r.enabled && dueStatus === 'soon' && (
-                          <span style={{ fontSize: 10, fontWeight: 700, background: '#FEF3C7', color: '#D97706', padding: '1px 6px', borderRadius: 100 }}>まもなく</span>
-                        )}
-                      </div>
-                      <p style={{ fontSize: 11, color: '#98A2AE', margin: 0 }}>
-                        {r.next_due_date
-                          ? `次回: ${new Date(r.next_due_date).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })}`
-                          : `${r.interval_months}ヶ月ごと（最終実施未設定）`}
-                      </p>
-                    </div>
-                    <button onClick={() => handleMarkDone(r)}
-                      style={{ flexShrink: 0, height: 30, padding: '0 10px', fontSize: 11, fontWeight: 600, border: '1px solid #E8ECF0', borderRadius: 100, background: 'white', color: '#5B6570', cursor: 'pointer' }}>
-                      完了
+              {showMaintenance && (
+                <>
+                  <div style={{ padding: '10px 16px', borderBottom: '1px solid #E8ECF0', display: 'flex', justifyContent: 'flex-end' }}>
+                    <button onClick={(e) => { e.stopPropagation(); setShowAddReminder(v => !v) }}
+                      style={{ fontSize: 11, color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>
+                      {showAddReminder ? '閉じる' : '+ 追加'}
                     </button>
                   </div>
-                )
-              })}
+                  {showAddReminder && (
+                    <div style={{ padding: '12px 16px', borderBottom: '1px solid #E8ECF0', background: '#FAFBFC', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <input
+                        placeholder="メンテナンス名（例：エアコンフィルター掃除）"
+                        value={newReminderTitle}
+                        onChange={e => setNewReminderTitle(e.target.value)}
+                        style={{ height: 40, border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '0 12px', fontSize: 13, boxSizing: 'border-box', width: '100%', fontFamily: 'inherit' }}
+                      />
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <div style={{ flex: 1 }}>
+                          <label style={{ fontSize: 11, color: '#5B6570', display: 'block', marginBottom: 3 }}>繰り返し</label>
+                          <select value={newReminderInterval} onChange={e => setNewReminderInterval(e.target.value)}
+                            style={{ width: '100%', height: 38, border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '0 8px', fontSize: 13, background: 'white' }}>
+                            {([['1','毎月'],['2','2ヶ月'],['3','3ヶ月'],['6','6ヶ月'],['12','1年'],['24','2年']] as [string,string][]).map(([v, l]) => (
+                              <option key={v} value={v}>{l}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <label style={{ fontSize: 11, color: '#5B6570', display: 'block', marginBottom: 3 }}>最後に実施した日</label>
+                          <input type="date" value={newReminderLastDone} onChange={e => setNewReminderLastDone(e.target.value)}
+                            style={{ width: '100%', height: 38, border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '0 8px', fontSize: 13, boxSizing: 'border-box' }} />
+                        </div>
+                      </div>
+                      <button onClick={handleAddReminder}
+                        disabled={savingReminder || !newReminderTitle.trim()}
+                        style={{ height: 38, background: '#0F1419', color: 'white', border: 'none', borderRadius: 100, fontSize: 13, fontWeight: 700, cursor: (savingReminder || !newReminderTitle.trim()) ? 'not-allowed' : 'pointer', opacity: (savingReminder || !newReminderTitle.trim()) ? 0.5 : 1 }}>
+                        {savingReminder ? '保存中...' : '追加する'}
+                      </button>
+                    </div>
+                  )}
+                  {reminders.length === 0 && !showAddReminder && (
+                    <p style={{ fontSize: 12, color: '#98A2AE', textAlign: 'center', padding: '20px 16px', margin: 0 }}>まだリマインダーはありません</p>
+                  )}
+                  {reminders.map((r, i) => {
+                    const dueStatus = getDueStatus(r.next_due_date)
+                    return (
+                      <div key={r.id} style={{ padding: '12px 16px', borderBottom: i < reminders.length - 1 ? '1px solid #F4F6F8' : 'none', display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2, flexWrap: 'wrap' }}>
+                            <p style={{ fontSize: 13, fontWeight: 500, color: r.enabled ? '#0F1419' : '#98A2AE', margin: 0 }}>{r.title}</p>
+                            {r.enabled && dueStatus === 'overdue' && (
+                              <span style={{ fontSize: 10, fontWeight: 700, background: '#FEE2E2', color: '#DC2626', padding: '1px 6px', borderRadius: 100 }}>期限切れ</span>
+                            )}
+                            {r.enabled && dueStatus === 'soon' && (
+                              <span style={{ fontSize: 10, fontWeight: 700, background: '#FEF3C7', color: '#D97706', padding: '1px 6px', borderRadius: 100 }}>まもなく</span>
+                            )}
+                          </div>
+                          <p style={{ fontSize: 11, color: '#98A2AE', margin: 0 }}>
+                            {r.next_due_date
+                              ? `次回: ${new Date(r.next_due_date).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })}`
+                              : `${r.interval_months}ヶ月ごと（最終実施未設定）`}
+                          </p>
+                        </div>
+                        <button onClick={() => handleMarkDone(r)}
+                          style={{ flexShrink: 0, height: 30, padding: '0 10px', fontSize: 11, fontWeight: 600, border: '1px solid #E8ECF0', borderRadius: 100, background: 'white', color: '#5B6570', cursor: 'pointer' }}>
+                          完了
+                        </button>
+                      </div>
+                    )
+                  })}
+                </>
+              )}
             </div>
           )}
 
-          {/* ── Repair / Trouble History ── */}
+          {/* ── 修理・トラブル履歴（accordion） ── */}
           {!appLoading && (
             <div style={{ background: 'white', border: '1px solid #E8ECF0', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,20,25,0.06)' }}>
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid #E8ECF0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div onClick={() => setShowHistory(v => !v)} style={{ padding: '12px 16px', borderBottom: showHistory ? '1px solid #E8ECF0' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
                 <p style={{ fontSize: 12, fontWeight: 700, color: '#5B6570', margin: 0 }}>修理・トラブル履歴</p>
-                <button onClick={() => setShowAddHistory(v => !v)}
-                  style={{ fontSize: 11, color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>
-                  {showAddHistory ? '閉じる' : '+ 記録を追加'}
-                </button>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ transition: 'transform 0.2s', transform: showHistory ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}>
+                  <path d="M4 6L8 10L12 6" stroke="#98A2AE" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
-
-              {showAddHistory && (
-                <div style={{ padding: '12px 16px', borderBottom: '1px solid #E8ECF0', background: '#FAFBFC', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <textarea
-                    placeholder="トラブルの内容（必須）"
-                    value={newSymptom}
-                    onChange={e => setNewSymptom(e.target.value)}
-                    style={{ width: '100%', minHeight: 64, border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '8px 10px', fontSize: 13, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }}
-                  />
-                  <textarea
-                    placeholder="試したこと（任意）"
-                    value={newTried}
-                    onChange={e => setNewTried(e.target.value)}
-                    style={{ width: '100%', minHeight: 48, border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '8px 10px', fontSize: 13, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }}
-                  />
-                  <select value={newStatus} onChange={e => setNewStatus(e.target.value)}
-                    style={{ height: 38, border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '0 10px', fontSize: 13, background: 'white' }}>
-                    <option value="対応中">対応中</option>
-                    <option value="解決済み">解決済み</option>
-                    <option value="修理依頼済み">修理依頼済み</option>
-                  </select>
-                  <button onClick={handleAddHistory}
-                    disabled={savingHistory || !newSymptom.trim()}
-                    style={{ height: 38, background: '#0F1419', color: 'white', border: 'none', borderRadius: 100, fontSize: 13, fontWeight: 700, cursor: (savingHistory || !newSymptom.trim()) ? 'not-allowed' : 'pointer', opacity: (savingHistory || !newSymptom.trim()) ? 0.5 : 1 }}>
-                    {savingHistory ? '保存中...' : '保存する'}
-                  </button>
-                </div>
-              )}
-
-              {history.length === 0 && !showAddHistory && (
-                <p style={{ fontSize: 12, color: '#98A2AE', textAlign: 'center', padding: '20px 16px', margin: 0 }}>まだ記録はありません</p>
-              )}
-              {history.map((h, i) => (
-                <div key={h.id} style={{ padding: '12px 16px', borderBottom: i < history.length - 1 ? '1px solid #F4F6F8' : 'none' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                    <span style={{ fontSize: 10, color: '#98A2AE' }}>
-                      {new Date(h.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })}
-                    </span>
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 100,
-                      background: h.status === '解決済み' ? '#DCFCE7' : h.status === '修理依頼済み' ? '#FEF3C7' : '#EFF6FF',
-                      color: h.status === '解決済み' ? '#059669' : h.status === '修理依頼済み' ? '#D97706' : '#2563EB',
-                    }}>
-                      {h.status}
-                    </span>
+              {showHistory && (
+                <>
+                  <div style={{ padding: '10px 16px', borderBottom: '1px solid #E8ECF0', display: 'flex', justifyContent: 'flex-end' }}>
+                    <button onClick={(e) => { e.stopPropagation(); setShowAddHistory(v => !v) }}
+                      style={{ fontSize: 11, color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}>
+                      {showAddHistory ? '閉じる' : '+ 記録を追加'}
+                    </button>
                   </div>
-                  <p style={{ fontSize: 13, fontWeight: 500, color: '#0F1419', margin: '0 0 4px' }}>{h.symptom}</p>
-                  {h.tried_solutions && (
-                    <p style={{ fontSize: 11, color: '#5B6570', margin: 0 }}>試したこと: {h.tried_solutions}</p>
+                  {showAddHistory && (
+                    <div style={{ padding: '12px 16px', borderBottom: '1px solid #E8ECF0', background: '#FAFBFC', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <textarea
+                        placeholder="トラブルの内容（必須）"
+                        value={newSymptom}
+                        onChange={e => setNewSymptom(e.target.value)}
+                        style={{ width: '100%', minHeight: 64, border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '8px 10px', fontSize: 13, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                      />
+                      <textarea
+                        placeholder="試したこと（任意）"
+                        value={newTried}
+                        onChange={e => setNewTried(e.target.value)}
+                        style={{ width: '100%', minHeight: 48, border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '8px 10px', fontSize: 13, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit' }}
+                      />
+                      <select value={newStatus} onChange={e => setNewStatus(e.target.value)}
+                        style={{ height: 38, border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '0 10px', fontSize: 13, background: 'white' }}>
+                        <option value="対応中">対応中</option>
+                        <option value="解決済み">解決済み</option>
+                        <option value="修理依頼済み">修理依頼済み</option>
+                      </select>
+                      <button onClick={handleAddHistory}
+                        disabled={savingHistory || !newSymptom.trim()}
+                        style={{ height: 38, background: '#0F1419', color: 'white', border: 'none', borderRadius: 100, fontSize: 13, fontWeight: 700, cursor: (savingHistory || !newSymptom.trim()) ? 'not-allowed' : 'pointer', opacity: (savingHistory || !newSymptom.trim()) ? 0.5 : 1 }}>
+                        {savingHistory ? '保存中...' : '保存する'}
+                      </button>
+                    </div>
                   )}
-                </div>
-              ))}
+                  {history.length === 0 && !showAddHistory && (
+                    <p style={{ fontSize: 12, color: '#98A2AE', textAlign: 'center', padding: '20px 16px', margin: 0 }}>まだ記録はありません</p>
+                  )}
+                  {history.map((h, i) => (
+                    <div key={h.id} style={{ padding: '12px 16px', borderBottom: i < history.length - 1 ? '1px solid #F4F6F8' : 'none' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                        <span style={{ fontSize: 10, color: '#98A2AE' }}>
+                          {new Date(h.created_at).toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })}
+                        </span>
+                        <span style={{
+                          fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 100,
+                          background: h.status === '解決済み' ? '#DCFCE7' : h.status === '修理依頼済み' ? '#FEF3C7' : '#EFF6FF',
+                          color: h.status === '解決済み' ? '#059669' : h.status === '修理依頼済み' ? '#D97706' : '#2563EB',
+                        }}>
+                          {h.status}
+                        </span>
+                      </div>
+                      <p style={{ fontSize: 13, fontWeight: 500, color: '#0F1419', margin: '0 0 4px' }}>{h.symptom}</p>
+                      {h.tried_solutions && (
+                        <p style={{ fontSize: 11, color: '#5B6570', margin: 0 }}>試したこと: {h.tried_solutions}</p>
+                      )}
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ── メモ（accordion） ── */}
+          {!appLoading && (
+            <div style={{ background: 'white', border: '1px solid #E8ECF0', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 4px rgba(15,20,25,0.06)' }}>
+              <div onClick={() => setShowMemo(v => !v)} style={{ padding: '12px 16px', borderBottom: showMemo ? '1px solid #E8ECF0' : 'none', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
+                <p style={{ fontSize: 12, fontWeight: 700, color: '#5B6570', margin: 0 }}>メモ</p>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ transition: 'transform 0.2s', transform: showMemo ? 'rotate(180deg)' : 'rotate(0deg)', flexShrink: 0 }}>
+                  <path d="M4 6L8 10L12 6" stroke="#98A2AE" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              {showMemo && (
+                notesEditMode ? (
+                  <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <textarea
+                      value={notes}
+                      onChange={e => setNotes(e.target.value)}
+                      placeholder="この製品に関するメモを自由に書けます（購入経緯、設置場所、カスタマイズ内容など）"
+                      rows={5}
+                      style={{ width: '100%', border: '1.5px solid #E8ECF0', borderRadius: 8, padding: '10px 12px', fontSize: 13, resize: 'vertical', boxSizing: 'border-box', fontFamily: 'inherit', lineHeight: 1.6 }}
+                    />
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button
+                        onClick={() => { setNotes(appliance?.notes || ''); setNotesEditMode(false) }}
+                        style={{ flex: 1, height: 38, background: 'white', color: '#5B6570', border: '1px solid #E8ECF0', borderRadius: 100, fontSize: 13, cursor: 'pointer' }}
+                      >
+                        キャンセル
+                      </button>
+                      <button
+                        onClick={handleSaveNotes}
+                        disabled={savingNotes}
+                        style={{ flex: 2, height: 38, background: '#0F1419', color: 'white', border: 'none', borderRadius: 100, fontSize: 13, fontWeight: 700, cursor: savingNotes ? 'not-allowed' : 'pointer', opacity: savingNotes ? 0.7 : 1 }}
+                      >
+                        {savingNotes ? '保存中...' : '保存する'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ padding: '12px 16px' }}>
+                    {notes ? (
+                      <p style={{ fontSize: 13, color: '#0F1419', margin: '0 0 10px', lineHeight: 1.7, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{notes}</p>
+                    ) : (
+                      <p style={{ fontSize: 12, color: '#C5CAD0', margin: '0 0 10px' }}>メモはありません</p>
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setNotesEditMode(true) }}
+                      style={{ fontSize: 11, color: '#2563EB', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600, padding: 0 }}
+                    >
+                      ✎ 編集
+                    </button>
+                  </div>
+                )
+              )}
             </div>
           )}
 
