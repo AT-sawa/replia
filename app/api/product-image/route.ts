@@ -75,8 +75,9 @@ export async function GET(req: NextRequest) {
       const html = await res.text()
 
       // Extract product image URL from Kakaku CDN
+      // Kakaku uses size folders like /ll/, /l/, /m/ — match any
       const imgMatch = html.match(
-        /img1\.kakaku\.k-img\.com\/images\/productimage\/l\/[A-Z0-9]+\.jpg/i
+        /img1\.kakaku\.k-img\.com\/images\/productimage\/[a-z]+\/[A-Za-z0-9]+\.jpg/i
       )
       if (imgMatch) imageUrl = `https://${imgMatch[0]}`
 
