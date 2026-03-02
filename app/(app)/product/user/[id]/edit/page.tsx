@@ -57,6 +57,81 @@ const GENRE_CATEGORIES: Record<string, string[]> = {
   'その他': ['その他'],
 }
 
+const BRAND_MAP: Record<string, string[]> = {
+  'エアコン':         ['Panasonic', 'SHARP', 'HITACHI', 'TOSHIBA', 'Mitsubishi Electric', 'Daikin', 'Fujitsu General', 'コロナ', 'アイリスオーヤマ'],
+  '洗濯機':           ['Panasonic', 'SHARP', 'HITACHI', 'TOSHIBA', 'Mitsubishi Electric', 'AQUA', 'Haier', 'アイリスオーヤマ'],
+  '洗濯乾燥機':       ['Panasonic', 'SHARP', 'HITACHI', 'TOSHIBA', 'Mitsubishi Electric', 'AQUA', 'Haier'],
+  '乾燥機':           ['Panasonic', 'SHARP', 'HITACHI', 'Rinnai'],
+  '冷蔵庫':           ['Panasonic', 'SHARP', 'HITACHI', 'TOSHIBA', 'Mitsubishi Electric', 'AQUA', 'Haier', 'アイリスオーヤマ', 'LG'],
+  '掃除機':           ['Dyson', 'Panasonic', 'SHARP', 'HITACHI', 'TOSHIBA', 'アイリスオーヤマ', 'Makita'],
+  'ロボット掃除機':   ['iRobot', 'Dyson', 'エコバックス', 'Anker', 'Panasonic', 'SHARP', 'アイリスオーヤマ', 'Xiaomi'],
+  '空気清浄機':       ['Panasonic', 'SHARP', 'HITACHI', 'Daikin', 'アイリスオーヤマ', 'Dyson', 'Blueair'],
+  '加湿器':           ['Panasonic', 'SHARP', 'HITACHI', 'Daikin', 'アイリスオーヤマ', 'Balmuda', 'ダイニチ'],
+  '除湿機':           ['Panasonic', 'SHARP', 'HITACHI', 'コロナ', 'アイリスオーヤマ'],
+  '扇風機':           ['Panasonic', 'SHARP', 'HITACHI', 'アイリスオーヤマ', 'Dyson', 'Balmuda'],
+  '電子レンジ':       ['Panasonic', 'SHARP', 'HITACHI', 'TOSHIBA', 'アイリスオーヤマ', 'LG'],
+  'オーブントースター': ['Panasonic', 'SHARP', 'Balmuda', 'De\'Longhi', 'アイリスオーヤマ', 'TIGER', 'Sirocca'],
+  '炊飯器':           ['Panasonic', 'SHARP', 'HITACHI', 'TOSHIBA', 'Mitsubishi Electric', 'Tiger', 'Zojirushi', 'アイリスオーヤマ'],
+  '食洗機':           ['Panasonic', 'SHARP', 'アイリスオーヤマ', 'Bosch'],
+  '電気ケトル':       ['Panasonic', 'TIGER', 'Zojirushi', 'De\'Longhi', 'Balmuda', 'アイリスオーヤマ', 'THERMOS'],
+  'コーヒーメーカー': ['Panasonic', 'SHARP', 'De\'Longhi', 'Nespresso', 'Melitta', 'HARIO', 'Sirocca'],
+  'ミキサー・ブレンダー': ['Panasonic', 'SHARP', 'TESCOM', 'アイリスオーヤマ', 'Vitamix'],
+  'ホットプレート':   ['TIGER', 'SHARP', 'Panasonic', 'Zojirushi', 'アイリスオーヤマ'],
+  'IHクッキングヒーター': ['Panasonic', 'SHARP', 'HITACHI', 'TOSHIBA', 'Mitsubishi Electric', 'アイリスオーヤマ'],
+  '電気圧力鍋':       ['Panasonic', 'SHARP', 'アイリスオーヤマ', 'TIGER', 'Zojirushi', 'Sirocca'],
+  'ドライヤー':       ['Panasonic', 'SHARP', 'HITACHI', 'Dyson', 'TESCOM', 'Salonia', 'アイリスオーヤマ'],
+  'ヘアアイロン':     ['Panasonic', 'SHARP', 'Dyson', 'Salonia', 'TESCOM', 'ReFa'],
+  '電動歯ブラシ':     ['Panasonic', 'HITACHI', 'Oral-B', 'Philips', 'Braun'],
+  '電気シェーバー':   ['Panasonic', 'HITACHI', 'Philips', 'Braun', 'IZUMI'],
+  '体重計・体組成計': ['Panasonic', 'OMRON', 'Withings', 'TANITA', 'A&D'],
+  'マッサージ機':     ['Panasonic', 'SHARP', 'アイリスオーヤマ', 'FUJIIRYOKI', 'ファミリーイナダ'],
+  '血圧計':           ['OMRON', 'Panasonic', 'A&D', 'CITIZEN', 'テルモ'],
+  '体温計':           ['OMRON', 'テルモ', 'A&D', 'Panasonic'],
+  'テレビ':           ['Sony', 'SHARP', 'Panasonic', 'TOSHIBA', 'LG', 'Samsung', 'ハイセンス', 'FUNAI'],
+  'PC・パソコン':     ['Apple', 'Fujitsu', 'NEC', 'DELL', 'HP', 'Lenovo', 'ASUS', 'Microsoft', 'Dynabook', 'VAIO'],
+  'スマートフォン':   ['Apple', 'Sony', 'SHARP', 'Samsung', 'Fujitsu', 'OPPO', 'Google'],
+  'タブレット':       ['Apple', 'Sony', 'Samsung', 'ASUS', 'Lenovo', 'Microsoft', 'Amazon'],
+  'スピーカー':       ['Sony', 'JBL', 'Bose', 'Panasonic', 'YAMAHA', 'DENON', 'Anker'],
+  'ヘッドホン・イヤホン': ['Sony', 'Bose', 'Panasonic', 'JBL', 'Apple', 'SENNHEISER', 'Audio-Technica', 'Anker'],
+  '録画機・レコーダー': ['Sony', 'Panasonic', 'SHARP', 'TOSHIBA', 'HITACHI'],
+  'プロジェクター':   ['Epson', 'SHARP', 'Panasonic', 'Sony', 'BenQ', 'XGIMI', 'Anker'],
+  'デジタルカメラ':   ['Sony', 'Canon', 'Nikon', 'Fujifilm', 'Panasonic', 'Ricoh', 'Olympus'],
+  '一眼レフカメラ':   ['Canon', 'Nikon', 'Pentax'],
+  'ミラーレスカメラ': ['Sony', 'Canon', 'Nikon', 'Fujifilm', 'Panasonic', 'Olympus', 'SIGMA'],
+  'ビデオカメラ':     ['Sony', 'Panasonic', 'Canon', 'JVC'],
+  'アクションカメラ': ['GoPro', 'DJI', 'Insta360', 'Sony'],
+  'ドローン':         ['DJI', 'Parrot', 'Autel'],
+  'ゲーム機':         ['Sony', 'Nintendo', 'Microsoft'],
+  '電子ピアノ・キーボード': ['YAMAHA', 'Roland', 'Casio', 'KORG'],
+  '給湯器':           ['Noritz', 'Rinnai', 'Paloma', 'コロナ'],
+  'エコキュート':     ['Panasonic', 'HITACHI', 'Daikin', 'TOSHIBA', 'Mitsubishi Electric', 'コロナ'],
+  '照明・シーリングライト': ['Panasonic', 'HITACHI', 'TOSHIBA', 'ODELiC', 'コイズミ'],
+  'カーナビ':         ['Panasonic', 'Pioneer', 'KENWOOD', 'Sony', 'ALPINE', 'CLARION'],
+  'ドライブレコーダー': ['YUPITERU', 'COMTEC', 'KENWOOD', 'Panasonic', 'Garmin'],
+  '電動自転車・E-Bike': ['Panasonic', 'YAMAHA', 'Bridgestone', 'GIANT'],
+  'スマートウォッチ': ['Apple', 'Samsung', 'Garmin', 'Fitbit', 'Withings', 'CASIO'],
+  '電動ドリル':       ['Makita', 'HiKOKI', 'RYOBI', 'Bosch', 'BLACK+DECKER'],
+  'ポータブル電源':   ['EcoFlow', 'Jackery', 'Anker', 'BLUETTI'],
+  'ポータブル冷蔵庫': ['Engel', 'Dometic', 'EcoFlow', 'CampingMoon'],
+}
+
+const COMMON_BRANDS = [
+  'Panasonic', 'SHARP', 'HITACHI', 'TOSHIBA', 'Sony', 'Mitsubishi Electric',
+  'Daikin', 'Fujitsu', 'アイリスオーヤマ', 'AQUA', 'Haier', 'LG', 'Samsung',
+  'Apple', 'Dyson', 'Tiger', 'Zojirushi', 'OMRON', 'Balmuda',
+]
+
+function getBrandSuggestions(input: string, applianceType: string): string[] {
+  if (!input.trim()) return []
+  const q = input.toLowerCase()
+  const categoryBrands = BRAND_MAP[applianceType] || []
+  const merged: string[] = [...categoryBrands]
+  for (const b of COMMON_BRANDS) {
+    if (!merged.includes(b)) merged.push(b)
+  }
+  return merged.filter(b => b.toLowerCase().includes(q)).slice(0, 8)
+}
+
 function findGenre(type: string): string {
   for (const [genre, subs] of Object.entries(GENRE_CATEGORIES)) {
     if (subs.includes(type)) return genre
@@ -81,6 +156,7 @@ export default function EditAppliancePage({ params }: { params: { id: string } }
   const [selectedGenre, setSelectedGenre] = useState('')
   const [applianceType, setApplianceType] = useState('')
   const [brand, setBrand] = useState('')
+  const [showBrandSuggestions, setShowBrandSuggestions] = useState(false)
   const [modelNumber, setModelNumber] = useState('')
   const [purchaseYear, setPurchaseYear] = useState('')
   const [purchaseMonth, setPurchaseMonth] = useState('')
@@ -323,13 +399,31 @@ export default function EditAppliancePage({ params }: { params: { id: string } }
         {/* Brand */}
         <div>
           <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>ブランド・メーカー</label>
-          <input
-            type="text"
-            value={brand}
-            onChange={e => setBrand(e.target.value)}
-            placeholder="例：Panasonic, SHARP, HITACHI"
-            style={{ width: '100%', height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 14px', fontSize: 14, color: '#0F1419', background: 'white', boxSizing: 'border-box', fontFamily: "'Zen Kaku Gothic New', sans-serif" }}
-          />
+          <div style={{ position: 'relative' }}>
+            <input
+              type="text"
+              value={brand}
+              onChange={e => { setBrand(e.target.value); setShowBrandSuggestions(true) }}
+              onFocus={() => { if (brand) setShowBrandSuggestions(true) }}
+              onBlur={() => setTimeout(() => setShowBrandSuggestions(false), 150)}
+              placeholder="例：Panasonic, SHARP, HITACHI"
+              style={{ width: '100%', height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 14px', fontSize: 14, color: '#0F1419', background: 'white', boxSizing: 'border-box', fontFamily: "'Zen Kaku Gothic New', sans-serif" }}
+            />
+            {showBrandSuggestions && getBrandSuggestions(brand, applianceType).length > 0 && (
+              <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, marginTop: 4, background: 'white', border: '1px solid #E8ECF0', borderRadius: 10, boxShadow: '0 4px 16px rgba(15,20,25,0.12)', zIndex: 100, overflow: 'hidden' }}>
+                {getBrandSuggestions(brand, applianceType).map((s) => (
+                  <div key={s}
+                    onMouseDown={() => { setBrand(s); setShowBrandSuggestions(false) }}
+                    style={{ padding: '10px 14px', fontSize: 13, color: '#0F1419', cursor: 'pointer', borderBottom: '1px solid #F4F6F8' }}
+                    onMouseEnter={e => (e.currentTarget.style.background = '#F4F6F8')}
+                    onMouseLeave={e => (e.currentTarget.style.background = 'white')}
+                  >
+                    {s}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Purchase Date — year / month / day selects */}
