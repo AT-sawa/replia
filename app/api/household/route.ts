@@ -43,8 +43,8 @@ export async function POST(req: NextRequest) {
 
   // ── CREATE ──────────────────────────────────────────
   if (action === 'create') {
-    // Generate a random 6-char alphanumeric code
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    // Generate a random 6-char alphanumeric code (lowercase + digits, excluding 0/o/l)
+    const chars = 'abcdefghijkmnpqrstuvwxyz123456789'
     let newCode = ''
     for (let i = 0; i < 6; i++) {
       newCode += chars[Math.floor(Math.random() * chars.length)]
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     const { data: h } = await supabase
       .from('households')
       .select('id, code')
-      .eq('code', (code as string).toUpperCase().trim())
+      .eq('code', (code as string).toLowerCase().trim())
       .maybeSingle()
 
     if (!h) {
