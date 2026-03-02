@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createBrowserClient } from '@supabase/ssr'
+import { ApplianceIcon } from '@/components/ui/ApplianceIcon'
 
 const GENRE_CATEGORIES: Record<string, string[]> = {
   '生活家電': [
@@ -90,6 +91,11 @@ export default function EditAppliancePage({ params }: { params: { id: string } }
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
 
+  // Product image (auto-fetched from model number)
+  const [productImageUrl, setProductImageUrl] = useState<string | null>(null)
+  const [imageLoading, setImageLoading] = useState(false)
+  const [brandAutoFilled, setBrandAutoFilled] = useState(false)
+
   // Photo upload
   const photoInputRef = useRef<HTMLInputElement>(null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
@@ -107,6 +113,7 @@ export default function EditAppliancePage({ params }: { params: { id: string } }
         setSelectedGenre(findGenre(type))
         setBrand(a.brand || '')
         setModelNumber(a.model || '')
+        setProductImageUrl(a.image_url || null)
         if (a.purchase_date) {
           const [y, m, day] = a.purchase_date.split('-')
           setPurchaseYear(y || '')
@@ -118,6 +125,27 @@ export default function EditAppliancePage({ params }: { params: { id: string } }
       })
       .finally(() => setLoading(false))
   }, [params.id])
+
+  // Auto-fetch product image from model number (debounced, same as register page)
+  useEffect(() => {
+    const trimmed = modelNumber.trim()
+    if (trimmed.length < 3) return
+    const timer = setTimeout(async () => {
+      setImageLoading(true)
+      try {
+        const res = await fetch(`/api/product-image?model=${encodeURIComponent(trimmed)}`)
+        const data = await res.json()
+        if (data.imageUrl) setProductImageUrl(data.imageUrl)
+        if (data.brand && (!brand.trim() || brandAutoFilled)) {
+          setBrand(data.brand)
+          setBrandAutoFilled(true)
+        }
+      } catch { /* silent */ }
+      finally { setImageLoading(false) }
+    }, 900)
+    return () => clearTimeout(timer)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modelNumber])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -157,9 +185,9 @@ export default function EditAppliancePage({ params }: { params: { id: string } }
           ? `${purchaseYear}-${purchaseMonth.padStart(2, '0')}-${purchaseDay.padStart(2, '0')}`
           : null,
         store_name: storeName,
+        image_url: imageUrl ?? productImageUrl ?? null,
       }
       if (warrantyMonths) body.warranty_months = parseInt(warrantyMonths)
-      if (imageUrl) body.image_url = imageUrl
 
       const res = await fetch(`/api/appliances/${params.id}`, {
         method: 'PATCH',
@@ -199,6 +227,7 @@ export default function EditAppliancePage({ params }: { params: { id: string } }
         <p style={{ fontSize: 16, fontWeight: 700, color: '#0F1419', margin: 0 }}>家電を編集</p>
       </div>
 
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       <form onSubmit={handleSubmit} style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
 
         {/* Appliance Type — 2-step: genre → sub-category */}
@@ -252,13 +281,31 @@ export default function EditAppliancePage({ params }: { params: { id: string } }
         {/* Model Number */}
         <div>
           <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>型番</label>
-          <input
-            type="text"
-            value={modelNumber}
-            onChange={e => setModelNumber(e.target.value)}
-            placeholder="例：NA-VX900BL"
-            style={{ width: '100%', height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 14px', fontSize: 14, color: '#0F1419', background: 'white', boxSizing: 'border-box', fontFamily: "'DM Sans', sans-serif" }}
-          />
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <input
+              type="text"
+              value={modelNumber}
+              onChange={e => setModelNumber(e.target.value)}
+              placeholder="例：NA-VX900BL"
+              style={{ flex: 1, height: 46, border: '1.5px solid #E8ECF0', borderRadius: 10, padding: '0 14px', fontSize: 14, color: '#0F1419', background: 'white', boxSizing: 'border-box', fontFamily: "'DM Sans', sans-serif" }}
+            />
+            {/* Product image preview */}
+            <div style={{ width: 46, height: 46, borderRadius: 10, border: '1.5px solid #E8ECF0', background: '#F4F6F8', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden', position: 'relative' }}>
+              {imageLoading ? (
+                <div style={{ width: 20, height: 20, border: '2px solid #E8ECF0', borderTopColor: '#0F1419', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+              ) : productImageUrl ? (
+                <img src={productImageUrl} alt="製品画像" style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  onError={() => setProductImageUrl(null)} />
+              ) : (
+                <ApplianceIcon type={applianceType} size={24} />
+              )}
+            </div>
+          </div>
+          {productImageUrl && !imageLoading && (
+            <p style={{ fontSize: 10, color: '#059669', margin: '4px 0 0', display: 'flex', alignItems: 'center', gap: 3 }}>
+              ✓ 製品画像を自動取得しました
+            </p>
+          )}
         </div>
 
         {/* Brand */}
