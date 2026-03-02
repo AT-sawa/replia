@@ -93,19 +93,24 @@ export default function AccountPage() {
           <p style={{ fontSize: 13, fontWeight: 700, color: '#DC2626', margin: '0 0 4px' }}>
             アカウントの削除
           </p>
-          <p style={{ fontSize: 12, color: '#5B6570', margin: '0 0 12px', lineHeight: 1.6 }}>
+          <p style={{ fontSize: 12, color: '#5B6570', margin: '0 0 4px', lineHeight: 1.6 }}>
             アカウントを削除すると、すべてのデータが失われます。この操作は取り消せません。
           </p>
-          <button
-            onClick={() => router.push('/mypage')}
+          <p style={{ fontSize: 12, color: '#5B6570', margin: '0 0 12px', lineHeight: 1.6 }}>
+            削除をご希望の場合は <strong>support@replia.app</strong> までご連絡ください。
+          </p>
+          <a
+            href={`mailto:support@replia.app?subject=アカウント削除の申請&body=削除を希望するメールアドレス：${email ?? ''}`}
             style={{
+              display: 'inline-block',
               background: 'white', border: '1.5px solid #FFCDD2',
               borderRadius: 100, padding: '8px 20px',
-              fontSize: 13, fontWeight: 700, color: '#DC2626', cursor: 'pointer',
+              fontSize: 13, fontWeight: 700, color: '#DC2626',
+              textDecoration: 'none',
             }}
           >
             削除を申請する
-          </button>
+          </a>
         </div>
       </div>
     </div>

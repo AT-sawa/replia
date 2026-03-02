@@ -27,6 +27,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'messages is required' }, { status: 400 })
     }
 
+    // 1セッションあたり最大30往復（60メッセージ）に制限
+    if (messages.length > 60) {
+      return NextResponse.json({
+        reply: '1回のセッションでの上限（30往復）に達しました。新しいチャットを開始してください。',
+      })
+    }
+
     const openaiKey = process.env.OPENAI_API_KEY
     if (!openaiKey) {
       return NextResponse.json({ reply: 'AIサービスの設定が完了していません。' })

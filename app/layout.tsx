@@ -2,8 +2,19 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Replia',
-  description: 'AI-powered appliance support app',
+  title: 'replia — AI家電サポート',
+  description: '家電のトラブルをAIが即解決。保証書・取扱説明書の管理、メンテナンスリマインダーまで、あなたの家電をまるごとサポート。',
+  openGraph: {
+    title: 'replia — AI家電サポート',
+    description: '家電のトラブルをAIが即解決。保証書・取扱説明書の管理、メンテナンスリマインダーまで。',
+    type: 'website',
+    locale: 'ja_JP',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'replia — AI家電サポート',
+    description: '家電のトラブルをAIが即解決。保証書・取扱説明書の管理、メンテナンスリマインダーまで。',
+  },
 }
 
 export default function RootLayout({
