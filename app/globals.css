@@ -155,6 +155,12 @@ textarea:focus {
     flex-shrink: 0 !important;
   }
 
+  /* Scale ApplianceIcon SVG to fill the grid card */
+  .appliance-card-img-wrap svg {
+    width: 60% !important;
+    height: 60% !important;
+  }
+
   /* Text section */
   .appliance-card-body {
     flex: unset !important;
