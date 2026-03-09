@@ -33,19 +33,19 @@ async function fetchOptionalFields(
   admin: ReturnType<typeof createAdminClient>,
   id: string,
   userId: string
-): Promise<{ notes: string | null; manual_url: string | null }> {
+): Promise<{ notes: string | null; manual_url: string | null; nickname: string | null }> {
   try {
     const { data, error } = await admin
       .from('user_products')
-      .select('notes, manual_url')
+      .select('notes, manual_url, nickname')
       .eq('id', id)
       .eq('user_id', userId)
       .single()
-    if (error) return { notes: null, manual_url: null }
-    const row = data as { notes?: string | null; manual_url?: string | null }
-    return { notes: row?.notes ?? null, manual_url: row?.manual_url ?? null }
+    if (error) return { notes: null, manual_url: null, nickname: null }
+    const row = data as { notes?: string | null; manual_url?: string | null; nickname?: string | null }
+    return { notes: row?.notes ?? null, manual_url: row?.manual_url ?? null, nickname: row?.nickname ?? null }
   } catch {
-    return { notes: null, manual_url: null }
+    return { notes: null, manual_url: null, nickname: null }
   }
 }
 
@@ -113,7 +113,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const body = await req.json()
   const { appliance_type, brand, model, purchase_date, warranty_months, warranty_end, store_name, image_url,
-          receipt_photo_url, warranty_photo_url, manual_url, notes } = body
+          receipt_photo_url, warranty_photo_url, manual_url, notes, nickname } = body
 
   // Update products master table
   if (current.product_id) {
@@ -136,6 +136,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const optionalUpdates: Record<string, unknown> = {}
   if (notes !== undefined)      optionalUpdates.notes      = notes
   if (manual_url !== undefined) optionalUpdates.manual_url = manual_url
+  if (nickname !== undefined)   optionalUpdates.nickname   = nickname || null
   if (Object.keys(optionalUpdates).length > 0) {
     await admin
       .from('user_products')

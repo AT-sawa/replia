@@ -23,6 +23,7 @@ interface Appliance {
   warranty_photo_url: string | null
   manual_url: string | null
   notes: string | null
+  nickname: string | null
 }
 
 interface HistoryEntry {
@@ -405,7 +406,7 @@ export default function UserProductDetailPage({ params }: { params: { id: string
                 )}
               </div>
               <div style={{ textAlign: 'center' }}>
-                <p style={{ fontSize: 18, fontWeight: 700, color: '#0F1419', margin: 0 }}>{appliance!.appliance_type}</p>
+                <p style={{ fontSize: 18, fontWeight: 700, color: '#0F1419', margin: 0 }}>{appliance!.nickname || appliance!.appliance_type}</p>
                 <p style={{ fontSize: 13, color: '#98A2AE', margin: '4px 0' }}>
                   {[appliance!.model, appliance!.brand].filter(Boolean).join(' · ')}
                 </p>

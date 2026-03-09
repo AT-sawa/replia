@@ -23,6 +23,7 @@ function rowToAppliance(row: any) {
     store_name:      row.purchase_store           ?? '',
     image_url:       product?.image_url           ?? null,
     created_at:      row.created_at,
+    nickname:        row.nickname                 ?? null,
   }
 }
 
@@ -33,6 +34,7 @@ const PRODUCT_SELECT = `
   warranty_start,
   warranty_end,
   created_at,
+  nickname,
   products (
     id,
     model_number,

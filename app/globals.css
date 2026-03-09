@@ -138,7 +138,7 @@ textarea:focus {
   .appliance-card-img-wrap {
     width: 100%;
     aspect-ratio: 1 / 1;
-    background: #F4F6F8;
+    background: white;
     align-items: center;
     justify-content: center;
     overflow: hidden;
@@ -148,9 +148,10 @@ textarea:focus {
   /* Override ProductImage's inline width/height */
   .appliance-card-img-wrap img,
   .appliance-card-img-wrap > div {
-    width: 62% !important;
-    height: 62% !important;
+    width: 100% !important;
+    height: 100% !important;
     border-radius: 0 !important;
+    border: none !important;
     flex-shrink: 0 !important;
   }
 

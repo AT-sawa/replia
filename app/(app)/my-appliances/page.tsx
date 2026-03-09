@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Badge, { WarrantyStatus } from '@/components/ui/Badge'
 import { ApplianceIcon } from '@/components/ui/ApplianceIcon'
@@ -11,6 +11,7 @@ type SortKey = 'registered' | 'purchase' | 'warranty' | 'name'
 interface ApplianceItem {
   id: string
   name: string
+  nickname: string | null
   model: string
   brand: string
   category: string
@@ -37,10 +38,10 @@ function dbToItem(a: any): ApplianceItem {
   const daysLeft = Math.round((warrantyEndMs - Date.now()) / 86400000)
   const applianceType = a.appliance_type || 'その他'
   const model = a.model || ''
-  const displayName = model ? `${applianceType}・${model}` : applianceType
   return {
     id:             a.id,
-    name:           displayName,
+    name:           applianceType,
+    nickname:       a.nickname ?? null,
     model:          model || '—',
     brand:          a.brand || '',
     category:       applianceType,
@@ -66,6 +67,9 @@ export default function MyAppliancesPage() {
   const [selectedCategory, setSelectedCategory] = useState('すべて')
   const [sortKey, setSortKey] = useState<SortKey>('registered')
   const [imgErrors, setImgErrors] = useState<Set<string>>(new Set())
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState('')
+  const editInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetch('/api/appliances')
@@ -96,6 +100,22 @@ export default function MyAppliancesPage() {
       .finally(() => setLoading(false))
   }, [])
 
+  const handleSaveName = async (id: string) => {
+    const newName = editingName.trim()
+    setEditingId(null)
+    if (!newName) return
+    const item = items.find(x => x.id === id)
+    if (!item) return
+    const currentDisplay = item.nickname || item.category
+    if (newName === currentDisplay) return
+    setItems(prev => prev.map(x => x.id === id ? { ...x, nickname: newName } : x))
+    await fetch(`/api/appliances/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nickname: newName }),
+    }).catch(() => {})
+  }
+
   const categories = useMemo(
     () => ['すべて', ...Array.from(new Set(items.map(a => a.category)))],
     [items]
@@ -107,7 +127,7 @@ export default function MyAppliancesPage() {
       : items.filter(a => a.category === selectedCategory)
 
     if (sortKey === 'name') {
-      list = [...list].sort((a, b) => a.name.localeCompare(b.name, 'ja'))
+      list = [...list].sort((a, b) => (a.nickname || a.name).localeCompare(b.nickname || b.name, 'ja'))
     } else if (sortKey === 'purchase') {
       list = [...list].sort((a, b) => b.purchaseDateMs - a.purchaseDateMs)
     } else if (sortKey === 'warranty') {
@@ -215,55 +235,98 @@ export default function MyAppliancesPage() {
               このカテゴリの家電はありません
             </div>
           ) : (
-            filtered.map(item => (
-              <Link key={item.id} href={item.href} style={{ textDecoration: 'none' }}>
-                <div
-                  className="appliance-card-inner"
-                  style={{
-                    background: 'white', border: '1px solid #E8ECF0',
-                    borderRadius: 12, padding: '12px 14px',
-                    display: 'flex', alignItems: 'center', gap: 12,
-                    boxShadow: '0 1px 4px rgba(15,20,25,0.06)',
-                  }}
+            filtered.map(item => {
+              const isEditing = editingId === item.id
+              const displayName = item.nickname || item.category
+              const subtitle = [item.model !== '—' ? item.model : '', item.brand].filter(Boolean).join(' · ')
+              return (
+                <Link
+                  key={item.id}
+                  href={item.href}
+                  style={{ textDecoration: 'none' }}
+                  onClick={e => { if (isEditing) e.preventDefault() }}
                 >
-                  <div className="appliance-card-img-wrap">
-                    <div style={{ width: 64, height: 64, background: 'white', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, border: '1px solid #E8ECF0' }}>
-                      {item.imageUrl && !imgErrors.has(item.id) ? (
-                        <img
-                          src={item.imageUrl}
-                          alt={item.name}
-                          style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4, boxSizing: 'border-box' }}
-                          onError={() => setImgErrors(prev => new Set(prev).add(item.id))}
-                        />
-                      ) : (
-                        <ApplianceIcon type={item.category} size={48} />
+                  <div
+                    className="appliance-card-inner"
+                    style={{
+                      background: 'white', border: '1px solid #E8ECF0',
+                      borderRadius: 12, padding: '12px 14px',
+                      display: 'flex', alignItems: 'center', gap: 12,
+                      boxShadow: '0 1px 4px rgba(15,20,25,0.06)',
+                    }}
+                  >
+                    <div className="appliance-card-img-wrap">
+                      <div style={{ width: 64, height: 64, background: 'white', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, border: '1px solid #E8ECF0' }}>
+                        {item.imageUrl && !imgErrors.has(item.id) ? (
+                          <img
+                            src={item.imageUrl}
+                            alt={displayName}
+                            style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4, boxSizing: 'border-box' }}
+                            onError={() => setImgErrors(prev => new Set(prev).add(item.id))}
+                          />
+                        ) : (
+                          <ApplianceIcon type={item.category} size={48} />
+                        )}
+                      </div>
+                    </div>
+                    <div className="appliance-card-body" style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, minWidth: 0 }}>
+                        {isEditing ? (
+                          <input
+                            ref={editInputRef}
+                            autoFocus
+                            value={editingName}
+                            onChange={e => setEditingName(e.target.value)}
+                            onClick={e => e.stopPropagation()}
+                            onBlur={() => handleSaveName(item.id)}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') { e.preventDefault(); handleSaveName(item.id) }
+                              if (e.key === 'Escape') setEditingId(null)
+                            }}
+                            style={{ flex: 1, height: 28, fontSize: 13, fontWeight: 700, border: '1.5px solid #0F1419', borderRadius: 6, padding: '0 8px', minWidth: 0, outline: 'none' }}
+                          />
+                        ) : (
+                          <p className="appliance-card-name" style={{ fontSize: 14, fontWeight: 700, color: '#0F1419', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                            {displayName}
+                          </p>
+                        )}
+                        {!isEditing && (
+                          <button
+                            onClick={e => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              setEditingId(item.id)
+                              setEditingName(displayName)
+                            }}
+                            style={{ flexShrink: 0, width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#C5CAD0', padding: 0 }}
+                          >
+                            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                              <path d="M8.5 1.5L10.5 3.5L4 10H2V8L8.5 1.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" strokeLinecap="round"/>
+                            </svg>
+                          </button>
+                        )}
+                      </div>
+                      {subtitle && (
+                        <p style={{ fontSize: 11, color: '#98A2AE', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {subtitle}
+                        </p>
                       )}
                     </div>
+                    <div className="appliance-card-meta" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+                      <Badge status={item.status} />
+                      {item.status !== 'expired' && item.daysLeft > 0 && (
+                        <p style={{ fontSize: 10, color: '#98A2AE', margin: 0, fontFamily: "'DM Sans', sans-serif" }}>
+                          残{formatDaysRemaining(item.daysLeft)}
+                        </p>
+                      )}
+                    </div>
+                    <svg className="appliance-card-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginLeft: -4 }}>
+                      <path d="M6 4L10 8L6 12" stroke="#C5CAD0" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </div>
-                  <div className="appliance-card-body" style={{ flex: 1, minWidth: 0 }}>
-                    <p className="appliance-card-name" style={{ fontSize: 14, fontWeight: 700, color: '#0F1419', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {item.name}
-                    </p>
-                    {item.brand && (
-                      <p style={{ fontSize: 11, color: '#98A2AE', margin: '2px 0 0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {item.brand}
-                      </p>
-                    )}
-                  </div>
-                  <div className="appliance-card-meta" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
-                    <Badge status={item.status} />
-                    {item.status !== 'expired' && item.daysLeft > 0 && (
-                      <p style={{ fontSize: 10, color: '#98A2AE', margin: 0, fontFamily: "'DM Sans', sans-serif" }}>
-                        残{formatDaysRemaining(item.daysLeft)}
-                      </p>
-                    )}
-                  </div>
-                  <svg className="appliance-card-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, marginLeft: -4 }}>
-                    <path d="M6 4L10 8L6 12" stroke="#C5CAD0" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </div>
-              </Link>
-            ))
+                </Link>
+              )
+            })
           )}
         </div>
       )}
