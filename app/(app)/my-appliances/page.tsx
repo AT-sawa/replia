@@ -72,29 +72,21 @@ export default function MyAppliancesPage() {
   const editInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
+    // キャッシュがあれば即表示
+    try {
+      const cached = sessionStorage.getItem('my-appliances')
+      if (cached) {
+        setItems(JSON.parse(cached))
+        setLoading(false)
+      }
+    } catch { /* ignore */ }
+
     fetch('/api/appliances')
       .then(r => r.json())
       .then(d => {
         const loaded: ApplianceItem[] = (d.appliances ?? []).map(dbToItem)
         setItems(loaded)
-        // 画像未設定かつ型番ありの製品は自動で写真を取得・保存
-        loaded.forEach(item => {
-          if (!item.imageUrl && item.model && item.model !== '—') {
-            fetch(`/api/product-image?model=${encodeURIComponent(item.model)}`)
-              .then(r => r.json())
-              .then(img => {
-                if (img.imageUrl) {
-                  setItems(prev => prev.map(x => x.id === item.id ? { ...x, imageUrl: img.imageUrl } : x))
-                  fetch(`/api/appliances/${item.id}`, {
-                    method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image_url: img.imageUrl }),
-                  }).catch(() => {})
-                }
-              })
-              .catch(() => {})
-          }
-        })
+        try { sessionStorage.setItem('my-appliances', JSON.stringify(loaded)) } catch { /* ignore */ }
       })
       .catch(() => {})
       .finally(() => setLoading(false))
@@ -198,8 +190,17 @@ export default function MyAppliancesPage() {
 
       {/* List */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '60px 0', color: '#98A2AE', fontSize: 13 }}>
-          読み込み中...
+        <div className="appliance-list">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} style={{ background: 'white', border: '1px solid #E8ECF0', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 64, height: 64, borderRadius: 12, background: '#F0F2F4', flexShrink: 0 }} />
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ height: 14, width: '60%', borderRadius: 6, background: '#F0F2F4' }} />
+                <div style={{ height: 11, width: '40%', borderRadius: 6, background: '#F0F2F4' }} />
+              </div>
+              <div style={{ width: 48, height: 20, borderRadius: 6, background: '#F0F2F4', flexShrink: 0 }} />
+            </div>
+          ))}
         </div>
       ) : items.length === 0 ? (
         /* Empty state */
