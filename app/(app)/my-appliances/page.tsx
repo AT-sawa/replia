@@ -70,7 +70,7 @@ export default function MyAppliancesPage() {
     fetch('/api/appliances')
       .then(r => r.json())
       .then(d => {
-        const loaded = (d.appliances ?? []).map(dbToItem)
+        const loaded: ApplianceItem[] = (d.appliances ?? []).map(dbToItem)
         setItems(loaded)
         // 画像未設定かつ型番ありの製品は自動で写真を取得・保存
         loaded.forEach(item => {
