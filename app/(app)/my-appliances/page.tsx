@@ -65,6 +65,7 @@ export default function MyAppliancesPage() {
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('すべて')
   const [sortKey, setSortKey] = useState<SortKey>('registered')
+  const [imgErrors, setImgErrors] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     fetch('/api/appliances')
@@ -227,15 +228,15 @@ export default function MyAppliancesPage() {
                 >
                   <div className="appliance-card-img-wrap">
                     <div style={{ width: 64, height: 64, background: 'white', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, border: '1px solid #E8ECF0' }}>
-                      {item.imageUrl ? (
+                      {item.imageUrl && !imgErrors.has(item.id) ? (
                         <img
                           src={item.imageUrl}
                           alt={item.name}
                           style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4, boxSizing: 'border-box' }}
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                          onError={() => setImgErrors(prev => new Set(prev).add(item.id))}
                         />
                       ) : (
-                        <ApplianceIcon type={item.category} size={32} />
+                        <ApplianceIcon type={item.category} size={48} />
                       )}
                     </div>
                   </div>
