@@ -22,12 +22,15 @@ export default function LoginPage() {
 
     setLoading(false)
     if (error) {
-      if (error.message.includes('Invalid login credentials')) {
+      const msg = error.message
+      if (msg.includes('Invalid login credentials') || msg.includes('invalid_credentials')) {
         setError('メールアドレスまたはパスワードが正しくありません')
-      } else if (error.message.includes('Email not confirmed')) {
+      } else if (msg.includes('Email not confirmed')) {
         setError('メールアドレスの確認が完了していません。届いたメールのリンクをクリックしてください')
+      } else if (msg.includes('rate limit') || msg.includes('too many')) {
+        setError('ログイン試行が多すぎます。しばらく時間をおいてから再試行してください')
       } else {
-        setError(error.message)
+        setError('ログインに失敗しました。時間をおいて再度お試しください')
       }
       return
     }

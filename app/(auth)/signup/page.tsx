@@ -29,7 +29,18 @@ export default function SignupPage() {
 
     setLoading(false)
     if (error) {
-      setError(error.message)
+      const msg = error.message
+      if (msg.includes('already registered') || msg.includes('already been registered') || msg.includes('User already')) {
+        setError('このメールアドレスはすでに登録されています')
+      } else if (msg.includes('invalid') && msg.includes('email')) {
+        setError('メールアドレスの形式が正しくありません')
+      } else if (msg.includes('Password should be at least') || msg.includes('password')) {
+        setError('パスワードは6文字以上で入力してください')
+      } else if (msg.includes('rate limit') || msg.includes('too many')) {
+        setError('送信制限に達しました。しばらく時間をおいてから再試行してください')
+      } else {
+        setError('登録に失敗しました。時間をおいて再度お試しください')
+      }
       return
     }
     setDone(true)
@@ -57,7 +68,7 @@ export default function SignupPage() {
           </p>
           <p style={{ fontSize: 13, color: '#98A2AE', lineHeight: 1.7, marginBottom: 24 }}>
             <strong>{email}</strong> に確認メールを送りました。
-            メール内の「Confirm your email」をクリックしてからログインしてください。
+            メール内の「メールアドレスを確認する」をクリックしてからログインしてください。
           </p>
           <Link
             href="/login"
