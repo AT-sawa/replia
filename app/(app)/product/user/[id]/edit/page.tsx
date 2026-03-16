@@ -241,24 +241,43 @@ export default function EditAppliancePage({ params }: { params: { id: string } }
     setSaveError('')
     setSaving(true)
 
-    // Upload product image via server API (uses admin client, bypasses Storage RLS)
+    // Upload product image directly to Supabase Storage via signed URL
+    // (avoids Vercel 4.5MB body limit)
     let imageUrl: string | undefined
     if (productPhotoFile) {
       try {
         const ext = productPhotoFile.name.split('.').pop() ?? 'jpg'
-        const fd = new FormData()
-        fd.append('file', productPhotoFile)
-        fd.append('path', `product-images/${params.id}-${Date.now()}.${ext}`)
-        const upRes = await fetch('/api/upload-image', { method: 'POST', body: fd })
-        if (upRes.ok) {
-          const upData = await upRes.json()
-          imageUrl = upData.url
-        } else {
-          const upErr = await upRes.json().catch(() => ({}))
-          setSaveError(`画像のアップロードに失敗しました: ${upErr.error ?? ''}`)
+        const path = `product-images/${params.id}-${Date.now()}.${ext}`
+
+        // Step 1: Get signed upload URL from our server
+        const signRes = await fetch('/api/upload-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path }),
+        })
+        if (!signRes.ok) {
+          const e = await signRes.json().catch(() => ({}))
+          setSaveError(`画像のアップロードに失敗しました: ${e.error ?? ''}`)
           setSaving(false)
           return
         }
+        const { signedUrl, publicUrl } = await signRes.json()
+
+        // Step 2: Upload file directly to Supabase Storage
+        const uploadRes = await fetch(signedUrl, {
+          method: 'PUT',
+          body: productPhotoFile,
+          headers: {
+            'Content-Type': productPhotoFile.type || 'image/jpeg',
+            'x-upsert': 'true',
+          },
+        })
+        if (!uploadRes.ok) {
+          setSaveError('画像のアップロードに失敗しました。再度お試しください。')
+          setSaving(false)
+          return
+        }
+        imageUrl = publicUrl
       } catch {
         setSaveError('画像のアップロードに失敗しました。接続を確認してください。')
         setSaving(false)
