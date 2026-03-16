@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createBrowserClient } from '@supabase/ssr'
 import { ApplianceIcon } from '@/components/ui/ApplianceIcon'
 
 const GENRE_CATEGORIES: Record<string, string[]> = {
@@ -242,47 +241,28 @@ export default function EditAppliancePage({ params }: { params: { id: string } }
     setSaveError('')
     setSaving(true)
 
-    // Upload product image if a new file was selected
+    // Upload product image via server API (uses admin client, bypasses Storage RLS)
     let imageUrl: string | undefined
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
     if (productPhotoFile) {
       try {
         const ext = productPhotoFile.name.split('.').pop() ?? 'jpg'
-        const path = `product-images/${params.id}-${Date.now()}.${ext}`
-        const { error: uploadError } = await supabase.storage
-          .from('appliance-photos')
-          .upload(path, productPhotoFile, { upsert: true })
-        if (!uploadError) {
-          const { data: pub } = supabase.storage
-            .from('appliance-photos')
-            .getPublicUrl(path)
-          imageUrl = pub.publicUrl
+        const fd = new FormData()
+        fd.append('file', productPhotoFile)
+        fd.append('path', `product-images/${params.id}-${Date.now()}.${ext}`)
+        const upRes = await fetch('/api/upload-image', { method: 'POST', body: fd })
+        if (upRes.ok) {
+          const upData = await upRes.json()
+          imageUrl = upData.url
+        } else {
+          const upErr = await upRes.json().catch(() => ({}))
+          setSaveError(`画像のアップロードに失敗しました: ${upErr.error ?? ''}`)
+          setSaving(false)
+          return
         }
       } catch {
-        // continue without product photo
-      }
-    }
-
-    // Upload receipt/warranty photo if a new file was selected
-    if (photoFile) {
-      try {
-        const ext = photoFile.name.split('.').pop() ?? 'jpg'
-        const path = `receipts/${params.id}-${Date.now()}.${ext}`
-        const { error: uploadError } = await supabase.storage
-          .from('appliance-photos')
-          .upload(path, photoFile, { upsert: true })
-        if (!uploadError) {
-          const { data: pub } = supabase.storage
-            .from('appliance-photos')
-            .getPublicUrl(path)
-          // receipt upload — currently not wired to a separate field, kept for future use
-          void pub.publicUrl
-        }
-      } catch {
-        // continue without photo
+        setSaveError('画像のアップロードに失敗しました。接続を確認してください。')
+        setSaving(false)
+        return
       }
     }
 
