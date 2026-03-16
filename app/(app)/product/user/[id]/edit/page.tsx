@@ -175,7 +175,12 @@ export default function EditAppliancePage({ params }: { params: { id: string } }
   const [imageLoading, setImageLoading] = useState(false)
   const [brandAutoFilled, setBrandAutoFilled] = useState(false)
 
-  // Photo upload
+  // Product image manual upload
+  const productPhotoInputRef = useRef<HTMLInputElement>(null)
+  const [productPhotoFile, setProductPhotoFile] = useState<File | null>(null)
+  const [productPhotoPreview, setProductPhotoPreview] = useState<string | null>(null)
+
+  // Receipt/warranty photo upload
   const photoInputRef = useRef<HTMLInputElement>(null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoName, setPhotoName] = useState('')
@@ -237,14 +242,33 @@ export default function EditAppliancePage({ params }: { params: { id: string } }
     setSaveError('')
     setSaving(true)
 
-    // Upload photo if a new file was selected
+    // Upload product image if a new file was selected
     let imageUrl: string | undefined
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    if (productPhotoFile) {
+      try {
+        const ext = productPhotoFile.name.split('.').pop() ?? 'jpg'
+        const path = `product-images/${params.id}-${Date.now()}.${ext}`
+        const { error: uploadError } = await supabase.storage
+          .from('appliance-photos')
+          .upload(path, productPhotoFile, { upsert: true })
+        if (!uploadError) {
+          const { data: pub } = supabase.storage
+            .from('appliance-photos')
+            .getPublicUrl(path)
+          imageUrl = pub.publicUrl
+        }
+      } catch {
+        // continue without product photo
+      }
+    }
+
+    // Upload receipt/warranty photo if a new file was selected
     if (photoFile) {
       try {
-        const supabase = createBrowserClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-        )
         const ext = photoFile.name.split('.').pop() ?? 'jpg'
         const path = `receipts/${params.id}-${Date.now()}.${ext}`
         const { error: uploadError } = await supabase.storage
@@ -254,7 +278,8 @@ export default function EditAppliancePage({ params }: { params: { id: string } }
           const { data: pub } = supabase.storage
             .from('appliance-photos')
             .getPublicUrl(path)
-          imageUrl = pub.publicUrl
+          // receipt upload — currently not wired to a separate field, kept for future use
+          void pub.publicUrl
         }
       } catch {
         // continue without photo
@@ -394,6 +419,65 @@ export default function EditAppliancePage({ params }: { params: { id: string } }
               ✓ 製品画像を自動取得しました
             </p>
           )}
+        </div>
+
+        {/* Product Image Upload */}
+        <div>
+          <label style={{ fontSize: 12, fontWeight: 600, color: '#5B6570', display: 'block', marginBottom: 6 }}>製品画像</label>
+          <input
+            ref={productPhotoInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={e => {
+              const f = e.target.files?.[0]
+              if (f) {
+                setProductPhotoFile(f)
+                setProductPhotoPreview(URL.createObjectURL(f))
+              }
+              e.target.value = ''
+            }}
+          />
+          <div
+            onClick={() => productPhotoInputRef.current?.click()}
+            style={{
+              border: `2px dashed ${productPhotoPreview || productImageUrl ? '#86EFAC' : '#E8ECF0'}`,
+              borderRadius: 12,
+              padding: '16px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 14,
+              cursor: 'pointer',
+              background: productPhotoPreview || productImageUrl ? '#F0FDF4' : 'white',
+            }}
+          >
+            {/* Image preview */}
+            <div style={{ width: 60, height: 60, borderRadius: 10, overflow: 'hidden', flexShrink: 0, background: '#F4F6F8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {productPhotoPreview ? (
+                <img src={productPhotoPreview} alt="プレビュー" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              ) : productImageUrl ? (
+                <img src={productImageUrl} alt="製品画像" style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                  onError={() => setProductImageUrl(null)} />
+              ) : (
+                <ApplianceIcon type={applianceType} size={30} />
+              )}
+            </div>
+            <div>
+              {productPhotoPreview ? (
+                <p style={{ fontSize: 13, color: '#16A34A', fontWeight: 600, margin: 0 }}>✓ 新しい画像を選択済み</p>
+              ) : productImageUrl ? (
+                <>
+                  <p style={{ fontSize: 13, color: '#16A34A', fontWeight: 600, margin: 0 }}>✓ 画像あり</p>
+                  <p style={{ fontSize: 11, color: '#059669', margin: '2px 0 0' }}>タップして変更</p>
+                </>
+              ) : (
+                <>
+                  <p style={{ fontSize: 13, color: '#98A2AE', margin: 0 }}>写真をタップして追加</p>
+                  <p style={{ fontSize: 11, color: '#C5CAD0', margin: '2px 0 0' }}>JPG, PNG 対応</p>
+                </>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Brand */}
