@@ -22,41 +22,60 @@ const BRAND_MAP: Record<string, string> = {
 // Simple prefix → brand fallback for common Japanese appliance model numbers
 function guessFromModelPrefix(model: string): string | null {
   const m = model.toUpperCase()
-  // Panasonic
   if (/^NA-|^NR-|^CS-|^CF-|^HH-|^SC-|^EH-|^EW-|^F-\d|^MC-|^SR-/.test(m)) return 'Panasonic'
-  // SHARP（ES-は洗濯機、SJ-は冷蔵庫、AY-はエアコン等）
   if (/^ES-|^SJ-|^SH-|^AY-|^LC-|^AH-|^FP-|^KC-|^RE-|^RX-|^EC-/.test(m))  return 'SHARP'
-  // TOSHIBA
   if (/^AW-|^GR-|^VC-|^TW-|^RC-|^NW-|^NH-|^RAS-A|^ER-/.test(m))           return 'TOSHIBA'
-  // HITACHI
   if (/^BD-|^BW-|^R-S|^R-X|^R-W|^R-HW|^RAS-X|^RAS-Y|^RAS-G|^CV-|^PV-/.test(m)) return 'HITACHI'
-  // 三菱電機
   if (/^MSZ-|^MXZ-|^MJ-|^MR-|^ML-|^MFZ-/.test(m))                          return '三菱電機'
-  // SONY
   if (/^KJ-|^KD-|^HT-|^SRS-|^MDR-|^WF-/.test(m))                           return 'SONY'
-  // DAIKIN
   if (/^AN-|^ATC-|^ATZ-|^S\d{2}[A-Z]|^C\d{2}[A-Z]/.test(m))               return 'DAIKIN'
-  // 富士通ゼネラル
   if (/^AS-|^AH-X|^AG-|^AB-/.test(m))                                       return '富士通ゼネラル'
-  // AQUA
   if (/^AQW-|^AQR-/.test(m))                                                 return 'AQUA'
-  // Haier
   if (/^JW-|^JR-/.test(m))                                                   return 'Haier'
-  // アイリスオーヤマ
   if (/^IAW-|^KAW-|^PCF-|^IHF-/.test(m))                                    return 'アイリスオーヤマ'
-  // YAMAHA
   if (/^YSP-|^AX-[A-Z]|^TSR-|^NS-[A-Z]/.test(m))                           return 'YAMAHA'
   return null
 }
 
+// Model prefix → appliance category
+function guessCategoryFromModel(model: string): string | null {
+  const m = model.toUpperCase()
+  // エアコン
+  if (/^CS-|^MSZ-|^MXZ-|^MFZ-|^RAS-|^AS-|^AH-|^AN-|^ATC-|^ATZ-|^AY-|^S\d{2}[A-Z]|^C\d{2}[A-Z]/.test(m)) return 'エアコン'
+  // 洗濯機・洗濯乾燥機
+  if (/^NA-|^AW-|^ES-|^BD-|^BW-|^TW-|^AQW-|^JW-|^IAW-/.test(m)) return '洗濯機'
+  // 冷蔵庫
+  if (/^NR-|^GR-|^R-S|^R-X|^R-W|^R-HW|^SJ-|^MR-|^AQR-|^JR-/.test(m)) return '冷蔵庫'
+  // テレビ
+  if (/^KJ-|^KD-|^LC-|^GR-Z/.test(m)) return 'テレビ'
+  // 掃除機
+  if (/^MC-|^CV-|^PV-|^EC-/.test(m)) return '掃除機'
+  // 電子レンジ・オーブン
+  if (/^NE-|^RE-|^ER-|^RX-/.test(m)) return '電子レンジ'
+  // 炊飯器
+  if (/^SR-|^RC-|^NW-|^NH-/.test(m)) return '炊飯器'
+  // 食洗機
+  if (/^NP-/.test(m)) return '食洗機'
+  // 空気清浄機
+  if (/^F-\d|^FP-|^KC-/.test(m)) return '空気清浄機'
+  // ドライヤー
+  if (/^EH-|^IB-/.test(m)) return 'ドライヤー'
+  // スピーカー・オーディオ
+  if (/^SRS-|^HT-|^YSP-|^AX-/.test(m)) return 'スピーカー'
+  // ヘッドホン
+  if (/^MDR-|^WF-|^WH-/.test(m)) return 'ヘッドホン・イヤホン'
+  return null
+}
+
 // GET /api/product-image?model=NA-VX900BL
-// Returns { imageUrl: string | null, brand: string | null }
+// Returns { imageUrl: string | null, brand: string | null, category: string | null }
 export async function GET(req: NextRequest) {
   const model = req.nextUrl.searchParams.get('model')?.trim()
   if (!model || model.length < 3) return NextResponse.json({ imageUrl: null, brand: null })
 
-  // Start with prefix-based brand guess (instant, no network)
+  // Start with prefix-based guesses (instant, no network)
   let brand: string | null = guessFromModelPrefix(model)
+  const category: string | null = guessCategoryFromModel(model)
   let imageUrl: string | null = null
 
   try {
@@ -105,5 +124,5 @@ export async function GET(req: NextRequest) {
     // Network error — prefix-based brand still returned below
   }
 
-  return NextResponse.json({ imageUrl, brand })
+  return NextResponse.json({ imageUrl, brand, category })
 }

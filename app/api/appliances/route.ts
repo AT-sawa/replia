@@ -34,7 +34,6 @@ const PRODUCT_SELECT = `
   warranty_start,
   warranty_end,
   created_at,
-  nickname,
   products (
     id,
     model_number,
@@ -60,7 +59,22 @@ export async function GET() {
     .order('created_at', { ascending: false })
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
-  return NextResponse.json({ appliances: (data ?? []).map(rowToAppliance) })
+
+  const base = (data ?? []).map(rowToAppliance)
+
+  // nicknameを別クエリで取得（カラム未追加でも安全にfallback）
+  try {
+    const { data: nickData } = await admin
+      .from('user_products')
+      .select('id, nickname')
+      .eq('user_id', user.id)
+    if (nickData) {
+      const nickMap = Object.fromEntries(nickData.map((r: { id: string; nickname: string | null }) => [r.id, r.nickname ?? null]))
+      return NextResponse.json({ appliances: base.map(a => ({ ...a, nickname: nickMap[a.id] ?? null })) })
+    }
+  } catch { /* nicknameカラムなければnullのまま */ }
+
+  return NextResponse.json({ appliances: base })
 }
 
 // POST /api/appliances — create new appliance

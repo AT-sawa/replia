@@ -166,11 +166,21 @@ export default function RegisterPage() {
         const res = await fetch(`/api/product-image?model=${encodeURIComponent(trimmed)}`)
         const data = await res.json()
         setProductImageUrl(data.imageUrl ?? null)
-        // Auto-fill brand: always overwrite if it was previously auto-filled,
-        // or if the field is empty
+        // Auto-fill brand
         if (data.brand && (!brand.trim() || brandAutoFilled)) {
           setBrand(data.brand)
           setBrandAutoFilled(true)
+        }
+        // Auto-fill category if not yet selected
+        if (data.category && !applianceType) {
+          setApplianceType(data.category)
+          // ジャンルも自動選択
+          for (const [genre, subs] of Object.entries(GENRE_CATEGORIES)) {
+            if ((subs as string[]).includes(data.category)) {
+              setSelectedGenre(genre)
+              break
+            }
+          }
         }
       } catch {
         setProductImageUrl(null)
