@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createBrowserClient } from '@supabase/ssr'
 import Badge, { WarrantyStatus } from '@/components/ui/Badge'
 import { ApplianceIcon } from '@/components/ui/ApplianceIcon'
 import { formatDaysRemaining } from '@/lib/utils'
@@ -66,14 +65,23 @@ function getDueStatus(nextDue: string | null): 'overdue' | 'soon' | 'ok' | 'unse
 
 async function uploadToStorage(file: File, path: string): Promise<string | null> {
   try {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-    const { error } = await supabase.storage.from('appliance-photos').upload(path, file, { upsert: true })
-    if (error) return null
-    const { data } = supabase.storage.from('appliance-photos').getPublicUrl(path)
-    return data.publicUrl
+    // Get signed upload URL from server (bypasses RLS and Vercel body limit)
+    const signRes = await fetch('/api/upload-image', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path }),
+    })
+    if (!signRes.ok) return null
+    const { signedUrl, publicUrl } = await signRes.json()
+
+    // Upload directly to Supabase Storage using the signed URL
+    const uploadRes = await fetch(signedUrl, {
+      method: 'PUT',
+      body: file,
+      headers: { 'Content-Type': file.type || 'image/jpeg', 'x-upsert': 'true' },
+    })
+    if (!uploadRes.ok) return null
+    return publicUrl
   } catch {
     return null
   }
