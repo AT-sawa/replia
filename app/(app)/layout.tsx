@@ -11,8 +11,8 @@ export default function AppLayout({
       {/* Desktop sidebar — hidden on mobile */}
       <SideNav />
 
-      {/* Main content — pb-[58px] on mobile to clear fixed TabBar */}
-      <main className="flex-1 overflow-y-auto pb-[58px] md:pb-0" style={{ background: '#FAFBFC', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' }}>
+      {/* Main content — pb on mobile clears fixed TabBar + iOS home indicator */}
+      <main className="flex-1 overflow-y-auto md:pb-0" style={{ background: '#FAFBFC', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', paddingBottom: 'max(58px, calc(50px + env(safe-area-inset-bottom)))' }}>
         {children}
       </main>
 

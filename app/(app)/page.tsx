@@ -156,13 +156,13 @@ export default function HomePage() {
                       boxShadow: '0 1px 4px rgba(15,20,25,0.06)',
                     }}
                   >
-                    <div style={{ width: 40, height: 40, background: '#F4F6F8', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                    <div style={{ width: 48, height: 48, background: '#F4F6F8', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                       {item.image_url ? (
                         <img src={item.image_url} alt={item.appliance_type}
                           style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                       ) : (
-                        <ApplianceIcon type={item.appliance_type} size={22} />
+                        <ApplianceIcon type={item.appliance_type} size={28} />
                       )}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>

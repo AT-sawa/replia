@@ -257,7 +257,7 @@ export default function MyAppliancesPage() {
                     }}
                   >
                     <div className="appliance-card-img-wrap">
-                      <div style={{ width: 64, height: 64, background: 'white', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, border: '1px solid #E8ECF0' }}>
+                      <div style={{ width: 72, height: 72, background: 'white', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0, border: '1px solid #E8ECF0' }}>
                         {item.imageUrl && !imgErrors.has(item.id) ? (
                           <img
                             src={item.imageUrl}
@@ -266,7 +266,7 @@ export default function MyAppliancesPage() {
                             onError={() => setImgErrors(prev => new Set(prev).add(item.id))}
                           />
                         ) : (
-                          <ApplianceIcon type={item.category} size={48} />
+                          <ApplianceIcon type={item.category} size={52} />
                         )}
                       </div>
                     </div>
